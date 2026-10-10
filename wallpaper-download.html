@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Your wallpaper — minimal</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="schedule.css">
+</head>
+<body class="product-page">
+  <header class="header"><a class="logo" href="index.html" aria-label="minimal home">minimal.</a></header>
+  <main id="main-content"><section class="section buy-page"><p class="eyebrow">YOUR WALLPAPER / ダウンロード</p><h1>One quiet<br>screen<span>.</span></h1><p class="lead">購入ありがとうございます。選んだ壁紙を保存して、ホーム画面またはロック画面に設定してください。</p><figure id="wallpaper-preview" style="width:min(280px,70vw);margin:34px 0 26px;background:#171717;aspect-ratio:9/16"><img id="wallpaper-image" style="display:block;width:100%;height:100%;object-fit:cover" alt="Your selected wallpaper"></figure><a id="download-link" class="buy-button" href="#" download>壁紙をダウンロード <span aria-hidden="true">↓</span></a><p class="product-note">PERSONAL USE ONLY · 再配布・再販売は禁止です。</p></section></main>
+  <footer class="site-footer"><div class="footer-intro"><div class="footer-brand">minimal.</div><p>Less, but better.</p></div><div class="footer-bottom">© 2026 minimal. · Japan</div></footer>
+  <script>
+    (() => {
+      const items = {
+        'terrain-dune':['Dune','assets/wallpapers/terrain-studies-01-dune-iphone.png'],
+        'terrain-ridge':['Ridge','assets/wallpapers/terrain-studies-02-ridge-iphone.png'],
+        'terrain-tide':['Tide','assets/wallpapers/terrain-studies-03-tide-iphone.png'],
+        'terrain-stone':['Stone','assets/wallpapers/terrain-studies-04-stone-iphone.png'],
+        'terrain-moon':['Moon','assets/wallpapers/terrain-studies-05-moon-iphone.png'],
+        'terrain-fog':['Fog','assets/wallpapers/terrain-studies-06-fog-iphone.png'],
+        'nocturne-arc':['Arc','assets/wallpapers/minimal-wallpaper-01-iphone.png'],
+        'nocturne-sphere':['Sphere','assets/wallpapers/minimal-wallpaper-02-iphone.png'],
+        'nocturne-monolith':['Monolith','assets/wallpapers/minimal-wallpaper-03-iphone.png'],
+        'nocturne-light':['Light','assets/wallpapers/minimal-wallpaper-04-iphone.png']
+      };
+      const item = items[new URLSearchParams(location.search).get('item')] || items['terrain-dune'];
+      document.querySelector('.lead').textContent = `「${item[0]}」を選んでいただきありがとうございます。下のボタンから保存して、ホーム画面またはロック画面に設定してください。`;
+      document.querySelector('#wallpaper-image').src = item[1];
+      document.querySelector('#wallpaper-image').alt = `${item[0]} wallpaper`;
+      document.querySelector('#download-link').href = item[1];
+      document.querySelector('#download-link').download = `${item[0].toLowerCase()}-minimal-wallpaper.png`;
+    })();
+  </script>
+</body>
+</html>
