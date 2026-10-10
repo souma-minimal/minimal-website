@@ -20,4 +20,16 @@
 
   choices.forEach((choice) => choice.addEventListener('click', () => setLanguage(choice.dataset.languageChoice)));
   setLanguage(initial);
+
+  document.querySelectorAll('.wallpaper-card-preview').forEach((preview) => {
+    const gallery = preview.querySelector('.wallpaper-gallery');
+    if (!gallery) return;
+    const step = () => gallery.querySelector('.gallery-phone')?.getBoundingClientRect().width + 14 || 180;
+    preview.querySelector('[data-gallery-previous]')?.addEventListener('click', () => {
+      gallery.scrollBy({ left: -step(), behavior: 'smooth' });
+    });
+    preview.querySelector('[data-gallery-next]')?.addEventListener('click', () => {
+      gallery.scrollBy({ left: step(), behavior: 'smooth' });
+    });
+  });
 })();
