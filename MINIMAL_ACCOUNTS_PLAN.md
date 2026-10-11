@@ -16,7 +16,7 @@ One passwordless account for every minimal product. It should let a customer fin
 - Supabase project: `minimal-accounts` (free plan, Northeast Asia).
 - Passwordless email provider is enabled. The only approved production redirect is `https://minimal-website-djl.pages.dev/accounts.html`.
 - `profiles` and `purchase_entitlements` have RLS enabled. Customers can read only their own records; browsers cannot create or change entitlements.
-- The public Accounts page can send magic links and show the signed-in customer's library. It intentionally shows no historical purchases until the verified Stripe-to-entitlement webhook exists.
+- The public Accounts page can send magic links and show the signed-in customer's library. A verified Stripe-to-entitlement webhook is implemented in source and awaits its encrypted Cloudflare secrets and Stripe event destination.
 
 ## Security rules
 
