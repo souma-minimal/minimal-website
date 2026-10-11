@@ -27,9 +27,13 @@
     'Content-Type': 'application/json'
   });
   const getSessionFromHash = () => {
+    // Supabase appends tokens after # for an implicit magic-link callback.
+    // Read query parameters too so a browser/client that preserves them there
+    // still completes the session instead of appearing signed out.
     const hash = new URLSearchParams(location.hash.slice(1));
-    const accessToken = hash.get('access_token');
-    const refreshToken = hash.get('refresh_token');
+    const query = new URLSearchParams(location.search);
+    const accessToken = hash.get('access_token') || query.get('access_token');
+    const refreshToken = hash.get('refresh_token') || query.get('refresh_token');
     if (!accessToken) return null;
     localStorage.setItem(tokenKey, accessToken);
     if (refreshToken) localStorage.setItem(refreshKey, refreshToken);
@@ -64,6 +68,7 @@
     signedInEmail.textContent = user.email || '';
     form.hidden = true;
     signedIn.hidden = false;
+    window.dispatchEvent(new CustomEvent('minimal-account-session', { detail: { email: user.email || '' } }));
     if (!purchases.length) {
       libraryItems.innerHTML = `<p class="account-empty"><span class="lang-ja">まだライブラリに商品はありません。これからこのメールアドレスで購入した商品は、ここに並びます。</span><span class="lang-en">Nothing is in your library yet. Products purchased with this email will appear here.</span></p>`;
     } else {
@@ -85,7 +90,10 @@
     try {
       await request('/auth/v1/otp', {
         method: 'POST',
-        body: JSON.stringify({ email, create_user: true, redirect_to: `${location.origin}/accounts.html` })
+        // Cloudflare Pages canonicalizes /accounts.html to /accounts. Redirect
+        // to that final URL directly so an auth fragment cannot be dropped by
+        // an intermediate redirect before this script reads it.
+        body: JSON.stringify({ email, create_user: true, redirect_to: `${location.origin}/accounts` })
       });
       message('メールを送りました。届いたリンクを開くと、このページにログインします。', 'Check your email. Open the link and you will return here signed in.');
     } catch (error) {

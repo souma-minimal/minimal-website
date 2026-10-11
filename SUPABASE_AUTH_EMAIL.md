@@ -4,7 +4,13 @@ Configure this once in **Supabase Dashboard → minimal-accounts → Authenticat
 
 - Subject: `minimal Accounts — ログインリンク`
 - From name: `minimal Accounts`
-- Redirect URL remains: `https://minimal-website-djl.pages.dev/accounts.html`
+- Redirect URL: `https://minimal-website-djl.pages.dev/accounts`
+
+In **Authentication → URL Configuration**, allow this exact URL as well:
+
+`https://minimal-website-djl.pages.dev/accounts`
+
+Cloudflare Pages canonicalizes `accounts.html` to `/accounts`. Using the final URL directly prevents a redirect from losing a magic-link session fragment.
 
 Use this body:
 

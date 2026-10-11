@@ -6,14 +6,15 @@
   const languageKey = 'minimal-language';
   let language = localStorage.getItem(languageKey) || (navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en');
   const headers = { apikey: 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93', Authorization: `Bearer ${token || 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93'}` };
-  const label = signedIn => signedIn ? '● Accounts' : 'Accounts';
-  const addShortcut = (signedIn = false) => {
+  const label = signedIn => signedIn ? (language === 'ja' ? '● ログイン中' : '● Signed in') : 'Accounts';
+  const addShortcut = (signedIn = false, email = '') => {
     document.querySelectorAll('[data-account-shortcut]').forEach(node => node.remove());
     const link = document.createElement('a');
     link.href = accountUrl;
     link.className = `account-shortcut${signedIn ? ' is-signed-in' : ''}`;
     link.dataset.accountShortcut = 'true';
     link.setAttribute('aria-label', signedIn ? 'minimal Accounts: signed in' : 'minimal Accounts');
+    if (email) link.title = email;
     link.innerHTML = label(signedIn);
     const header = document.querySelector('.header, .top');
     if (!header) return;
@@ -62,6 +63,7 @@
   if (!token) return;
   fetch('https://etxroajblozqyjyvpcoo.supabase.co/auth/v1/user', { headers })
     .then(response => response.ok ? response.json() : Promise.reject())
-    .then(user => { if (!user?.email) throw new Error('No user'); addShortcut(true); })
+    .then(user => { if (!user?.email) throw new Error('No user'); addShortcut(true, user.email); })
     .catch(() => localStorage.removeItem(tokenKey));
+  window.addEventListener('minimal-account-session', event => addShortcut(true, event.detail?.email || ''));
 })();
