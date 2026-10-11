@@ -85,20 +85,17 @@
     localStorage.removeItem(flowKey);
     window.dispatchEvent(new CustomEvent('minimal-account-session', { detail: { email: user.email || '' } }));
     libraryItems.innerHTML = '<p class="account-empty"><span class="lang-ja">ライブラリを読み込んでいます…</span><span class="lang-en">Loading your library…</span></p>';
-    // The profile record is a convenience record, never a reason to make a
-    // successful login look slow or fail. Fetch entitlements in parallel.
-    const [, purchasesResult] = await Promise.allSettled([
-      request('/rest/v1/profiles', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ id: user.id }) }, accessToken),
-      request('/rest/v1/purchase_entitlements?select=product_key,granted_at&order=granted_at.desc', {}, accessToken)
-    ]);
-    if (purchasesResult.status !== 'fulfilled') {
-      libraryItems.innerHTML = '<p class="account-empty"><span class="lang-ja">ライブラリを読み込めませんでした。ページを再読み込みしてください。</span><span class="lang-en">We could not load your library. Please refresh the page.</span></p>';
-      return;
-    }
-    const purchases = purchasesResult.value;
-    libraryItems.innerHTML = !purchases.length
-      ? `<p class="account-empty"><span class="lang-ja">まだライブラリに商品はありません。これからこのメールアドレスで購入した商品は、ここに並びます。</span><span class="lang-en">Nothing is in your library yet. Products purchased with this email will appear here.</span></p>`
-      : purchases.map((purchase) => `<article><span>${productName(purchase.product_key)}</span><small>${new Date(purchase.granted_at).toLocaleDateString()}</small></article>`).join('');
+    // Entitlements are non-essential to authentication. Never make a member
+    // wait for a database query before their signed-in state is visible.
+    void request('/rest/v1/purchase_entitlements?select=product_key,granted_at&order=granted_at.desc', {}, accessToken)
+      .then((purchases) => {
+        libraryItems.innerHTML = !purchases.length
+          ? `<p class="account-empty"><span class="lang-ja">まだライブラリに商品はありません。これからこのメールアドレスで購入した商品は、ここに並びます。</span><span class="lang-en">Nothing is in your library yet. Products purchased with this email will appear here.</span></p>`
+          : purchases.map((purchase) => `<article><span>${productName(purchase.product_key)}</span><small>${new Date(purchase.granted_at).toLocaleDateString()}</small></article>`).join('');
+      })
+      .catch(() => {
+        libraryItems.innerHTML = '<p class="account-empty"><span class="lang-ja">ライブラリを読み込めませんでした。ページを再読み込みしてください。</span><span class="lang-en">We could not load your library. Please refresh the page.</span></p>';
+      });
     feedback.hidden = true;
   };
   const showError = (error) => { const detail = error?.message || ''; message(`完了できませんでした。入力内容を確認してもう一度お試しください。${detail ? ` (${detail})` : ''}`, `We could not complete that. Check your details and try again.${detail ? ` (${detail})` : ''}`); };
