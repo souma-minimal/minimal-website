@@ -105,6 +105,13 @@
     const schedulePrice = document.querySelector('.buy-summary strong');
     if (schedulePrice) schedulePrice.textContent = '$7';
   }
+  if (location.pathname.endsWith('thanks.html') || location.pathname.endsWith('/thanks')) {
+    translate('.thank-you .eyebrow', 'ありがとうございます');
+    translate('.thank-you h1', '今週に、<br>余白ができました<span>.</span>');
+    translate('.thank-you .lead', 'minimal Scheduleを、あなたのNotionに追加できます。');
+    translate('.thank-you .buy-button', 'Notionで複製する <span aria-hidden="true">↗</span>');
+    translate('.thank-you .product-note', 'Notionのページを開き、右上の「複製」を選ぶと自分のワークスペースに追加できます。');
+  }
 
   const wallpaperItems = {
     nocturne: [
