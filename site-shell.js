@@ -3,6 +3,7 @@
   const tokenKey = 'minimal-accounts-access-token';
   const refreshKey = 'minimal-accounts-refresh-token';
   const flowKey = 'minimal-accounts-auth-flow';
+  const emailKey = 'minimal-accounts-email';
   // If Supabase falls back to the Site URL, capture the implicit-flow token on
   // whichever page received it and immediately continue to Accounts. This
   // prevents a successful email sign-in from looking like a return to home.
@@ -16,6 +17,11 @@
     localStorage.setItem(tokenKey, callbackToken);
     if (callbackRefreshToken) localStorage.setItem(refreshKey, callbackRefreshToken);
     if (callbackFlow) localStorage.setItem(flowKey, callbackFlow);
+    try {
+      const payload = callbackToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const email = JSON.parse(atob(payload)).email;
+      if (email) localStorage.setItem(emailKey, email);
+    } catch { /* The account page will validate the callback token. */ }
     if (!location.pathname.endsWith('/accounts') && !location.pathname.endsWith('/accounts.html')) {
       location.replace(`${location.origin}/accounts`);
       return;
@@ -45,6 +51,7 @@
     localStorage.removeItem(tokenKey);
     localStorage.removeItem(refreshKey);
     localStorage.removeItem(flowKey);
+    localStorage.removeItem(emailKey);
     addShortcut(false);
     window.dispatchEvent(new CustomEvent('minimal-account-signout'));
   };
@@ -142,6 +149,10 @@
   addMobileMenu();
   addShortcut(false);
   if (!token) return;
+  // The email belongs to the signed-in session and is cached only to make the
+  // header responsive. A background request below still validates the session.
+  const cachedEmail = localStorage.getItem(emailKey);
+  if (cachedEmail) addShortcut(true, cachedEmail);
   const refreshSession = async () => {
     const refreshToken = localStorage.getItem(refreshKey);
     if (!refreshToken) throw new Error('No refresh token');
@@ -164,7 +175,11 @@
     return response.json();
   };
   getUser()
-    .then(user => { if (!user?.email) throw new Error('No user'); addShortcut(true, user.email); })
-    .catch(() => { localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); });
+    .then(user => {
+      if (!user?.email) throw new Error('No user');
+      localStorage.setItem(emailKey, user.email);
+      addShortcut(true, user.email);
+    })
+    .catch(() => { localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); localStorage.removeItem(emailKey); addShortcut(false); });
   window.addEventListener('minimal-account-session', event => addShortcut(true, event.detail?.email || ''));
 })();

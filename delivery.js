@@ -5,6 +5,10 @@
   const requested = new URLSearchParams(location.search).get('item');
   const japanese = (localStorage.getItem('minimal-language') || navigator.language).toLowerCase().startsWith('ja');
   const copy = (ja, en) => japanese ? ja : en;
+  const tokenKey = 'minimal-accounts-access-token';
+  const refreshKey = 'minimal-accounts-refresh-token';
+  const supabaseUrl = 'https://etxroajblozqyjyvpcoo.supabase.co';
+  const publicKey = 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93';
 
   const fail = message => {
     if (status) status.textContent = message;
@@ -16,10 +20,31 @@
     return;
   }
 
-  const token = localStorage.getItem('minimal-accounts-access-token');
-  fetch(`/api/entitlements?session_id=${encodeURIComponent(sessionId)}`, {
+  const tokenIsFresh = (token) => {
+    try {
+      const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return Number(JSON.parse(atob(payload)).exp || 0) > (Date.now() / 1000) + 30;
+    } catch { return false; }
+  };
+  const currentAccessToken = async () => {
+    const token = localStorage.getItem(tokenKey);
+    if (tokenIsFresh(token || '')) return token;
+    const refreshToken = localStorage.getItem(refreshKey);
+    if (!refreshToken) return token;
+    const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { apikey: publicKey, 'content-type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+    if (!response.ok) return token;
+    const session = await response.json();
+    if (session.access_token) localStorage.setItem(tokenKey, session.access_token);
+    if (session.refresh_token) localStorage.setItem(refreshKey, session.refresh_token);
+    return session.access_token || token;
+  };
+  currentAccessToken().then(token => fetch(`/api/entitlements?session_id=${encodeURIComponent(sessionId)}`, {
     cache: 'no-store', headers: token ? { authorization: `Bearer ${token}` } : {}
-  })
+  }))
     .then(response => response.json().then(data => ({ response, data })))
     .then(({ response, data }) => {
       if (!response.ok) throw new Error(data.error || copy('購入を確認できませんでした。', 'We could not verify this purchase.'));

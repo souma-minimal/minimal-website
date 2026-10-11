@@ -5,6 +5,7 @@
   const tokenKey = 'minimal-accounts-access-token';
   const refreshKey = 'minimal-accounts-refresh-token';
   const flowKey = 'minimal-accounts-auth-flow';
+  const emailKey = 'minimal-accounts-email';
   const form = document.querySelector('[data-account-form]');
   const resetForm = document.querySelector('[data-account-reset-form]');
   const status = document.querySelector('[data-account-status]');
@@ -40,7 +41,14 @@
     if (!session?.access_token) throw new Error('No session returned');
     localStorage.setItem(tokenKey, session.access_token);
     if (session.refresh_token) localStorage.setItem(refreshKey, session.refresh_token);
+    if (session.user?.email) localStorage.setItem(emailKey, session.user.email);
     return session.access_token;
+  };
+  const emailFromToken = (token) => {
+    try {
+      const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(payload)).email || '';
+    } catch { return ''; }
   };
   const getCallbackSession = async () => {
     const hash = new URLSearchParams(location.hash.slice(1));
@@ -60,6 +68,8 @@
     localStorage.setItem(tokenKey, accessToken);
     if (refreshToken) localStorage.setItem(refreshKey, refreshToken);
     if (callbackType) localStorage.setItem(flowKey, callbackType);
+    const email = emailFromToken(accessToken);
+    if (email) localStorage.setItem(emailKey, email);
     history.replaceState({}, document.title, location.pathname);
     return { token: accessToken, callbackType };
   };
@@ -70,24 +80,42 @@
     if (!response.ok) throw new Error('Could not refresh session');
     return storeSession(await response.json());
   };
+  const loadLibrary = async (accessToken) => {
+    const response = await fetch('/api/library', {
+      headers: { authorization: `Bearer ${accessToken}`, 'cache-control': 'no-store' }
+    });
+    if (!response.ok) throw new Error('Could not load library.');
+    return response.json();
+  };
   const productName = (key) => ({ 'free-still-water': 'Still Water', 'minimal-schedule': 'minimal Schedule', 'terrain-dune': 'Terrain Studies — Dune', 'terrain-ridge': 'Terrain Studies — Ridge', 'terrain-tide': 'Terrain Studies — Tide', 'terrain-stone': 'Terrain Studies — Stone', 'terrain-moon': 'Terrain Studies — Moon', 'terrain-fog': 'Terrain Studies — Fog' }[key] || key);
   const showAccessForm = () => { form.hidden = false; resetForm.hidden = true; signedIn.hidden = true; };
-  const renderLibrary = async (accessToken, knownUser = null) => {
-    // A password sign-in already returns the user object. Use it immediately
-    // rather than waiting for extra network round-trips before showing success.
-    const user = knownUser || await request('/auth/v1/user', {}, accessToken);
+  const showSignedInState = (email) => {
     library.hidden = false;
-    userLine.textContent = user.email || '';
-    signedInEmail.textContent = user.email || '';
+    userLine.textContent = email || '';
+    signedInEmail.textContent = email || '';
     form.hidden = true;
     resetForm.hidden = true;
     signedIn.hidden = false;
     localStorage.removeItem(flowKey);
-    window.dispatchEvent(new CustomEvent('minimal-account-session', { detail: { email: user.email || '' } }));
+    window.dispatchEvent(new CustomEvent('minimal-account-session', { detail: { email: email || '' } }));
+  };
+  const renderLibrary = async (accessToken, knownUser = null) => {
+    // Show the already-known account straight away. Waiting for /auth/v1/user
+    // made a successful password sign-in look stalled when a region was slow.
+    const cachedEmail = knownUser?.email || localStorage.getItem(emailKey) || emailFromToken(accessToken);
+    if (cachedEmail) {
+      localStorage.setItem(emailKey, cachedEmail);
+      showSignedInState(cachedEmail);
+    } else {
+      const user = await request('/auth/v1/user', {}, accessToken);
+      if (user.email) localStorage.setItem(emailKey, user.email);
+      showSignedInState(user.email || '');
+    }
     libraryItems.innerHTML = '<p class="account-empty"><span class="lang-ja">ライブラリを読み込んでいます…</span><span class="lang-en">Loading your library…</span></p>';
     // Entitlements are non-essential to authentication. Never make a member
     // wait for a database query before their signed-in state is visible.
-    void request('/rest/v1/purchase_entitlements?select=product_key,granted_at,stripe_checkout_session_id&order=granted_at.desc', {}, accessToken)
+    void loadLibrary(accessToken)
+      .catch(async () => loadLibrary(await refreshSession()))
       .then((purchases) => {
         // Keep the full purchase history in the database for support and
         // accounting, but show each owned product only once in the library.
@@ -196,7 +224,7 @@
   signOut.addEventListener('click', async () => {
     const accessToken = localStorage.getItem(tokenKey);
     if (accessToken) await request('/auth/v1/logout', { method: 'POST' }, accessToken).catch(() => null);
-    localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); localStorage.removeItem(flowKey);
+    localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); localStorage.removeItem(flowKey); localStorage.removeItem(emailKey);
     library.hidden = true; showAccessForm(); message('ログアウトしました。', 'You are signed out.', 'info');
   });
   window.addEventListener('minimal-account-signout', () => {
@@ -215,11 +243,11 @@
       } else if (accessToken) {
         renderLibrary(accessToken).catch(async () => {
           try { await renderLibrary(await refreshSession()); }
-          catch (error) { localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); showAccessForm(); showError(error); }
+          catch (error) { localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); localStorage.removeItem(emailKey); showAccessForm(); showError(error); }
         });
       }
     } catch (error) {
-      localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey);
+      localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); localStorage.removeItem(emailKey);
       showAccessForm(); showError(error);
     }
   })();
