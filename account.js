@@ -72,10 +72,10 @@
   };
   const productName = (key) => ({ 'free-still-water': 'Still Water', 'minimal-schedule': 'minimal Schedule', 'terrain-dune': 'Terrain Studies — Dune', 'terrain-ridge': 'Terrain Studies — Ridge', 'terrain-tide': 'Terrain Studies — Tide', 'terrain-stone': 'Terrain Studies — Stone', 'terrain-moon': 'Terrain Studies — Moon', 'terrain-fog': 'Terrain Studies — Fog' }[key] || key);
   const showAccessForm = () => { form.hidden = false; resetForm.hidden = true; signedIn.hidden = true; };
-  const renderLibrary = async (accessToken) => {
-    const user = await request('/auth/v1/user', {}, accessToken);
-    await request('/rest/v1/profiles', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ id: user.id }) }, accessToken);
-    const purchases = await request('/rest/v1/purchase_entitlements?select=product_key,granted_at&order=granted_at.desc', {}, accessToken);
+  const renderLibrary = async (accessToken, knownUser = null) => {
+    // A password sign-in already returns the user object. Use it immediately
+    // rather than waiting for extra network round-trips before showing success.
+    const user = knownUser || await request('/auth/v1/user', {}, accessToken);
     library.hidden = false;
     userLine.textContent = user.email || '';
     signedInEmail.textContent = user.email || '';
@@ -84,6 +84,18 @@
     signedIn.hidden = false;
     localStorage.removeItem(flowKey);
     window.dispatchEvent(new CustomEvent('minimal-account-session', { detail: { email: user.email || '' } }));
+    libraryItems.innerHTML = '<p class="account-empty"><span class="lang-ja">ライブラリを読み込んでいます…</span><span class="lang-en">Loading your library…</span></p>';
+    // The profile record is a convenience record, never a reason to make a
+    // successful login look slow or fail. Fetch entitlements in parallel.
+    const [, purchasesResult] = await Promise.allSettled([
+      request('/rest/v1/profiles', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ id: user.id }) }, accessToken),
+      request('/rest/v1/purchase_entitlements?select=product_key,granted_at&order=granted_at.desc', {}, accessToken)
+    ]);
+    if (purchasesResult.status !== 'fulfilled') {
+      libraryItems.innerHTML = '<p class="account-empty"><span class="lang-ja">ライブラリを読み込めませんでした。ページを再読み込みしてください。</span><span class="lang-en">We could not load your library. Please refresh the page.</span></p>';
+      return;
+    }
+    const purchases = purchasesResult.value;
     libraryItems.innerHTML = !purchases.length
       ? `<p class="account-empty"><span class="lang-ja">まだライブラリに商品はありません。これからこのメールアドレスで購入した商品は、ここに並びます。</span><span class="lang-en">Nothing is in your library yet. Products purchased with this email will appear here.</span></p>`
       : purchases.map((purchase) => `<article><span>${productName(purchase.product_key)}</span><small>${new Date(purchase.granted_at).toLocaleDateString()}</small></article>`).join('');
@@ -136,7 +148,7 @@
         message('ログインしています…', 'Signing you in…', 'info');
         const session = await request('/auth/v1/token?grant_type=password', { method: 'POST', body: JSON.stringify({ email, password }) });
         form.reset();
-        await renderLibrary(storeSession(session));
+        await renderLibrary(storeSession(session), session.user);
       }
     } catch (error) { showError(error); } finally { button.disabled = false; }
   });
