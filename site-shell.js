@@ -2,6 +2,7 @@
 (() => {
   const tokenKey = 'minimal-accounts-access-token';
   const refreshKey = 'minimal-accounts-refresh-token';
+  const flowKey = 'minimal-accounts-auth-flow';
   // If Supabase falls back to the Site URL, capture the implicit-flow token on
   // whichever page received it and immediately continue to Accounts. This
   // prevents a successful email sign-in from looking like a return to home.
@@ -9,9 +10,11 @@
   const callbackQuery = new URLSearchParams(location.search);
   const callbackToken = callbackHash.get('access_token') || callbackQuery.get('access_token');
   const callbackRefreshToken = callbackHash.get('refresh_token') || callbackQuery.get('refresh_token');
+  const callbackFlow = callbackHash.get('type') || callbackQuery.get('type');
   if (callbackToken) {
     localStorage.setItem(tokenKey, callbackToken);
     if (callbackRefreshToken) localStorage.setItem(refreshKey, callbackRefreshToken);
+    if (callbackFlow) localStorage.setItem(flowKey, callbackFlow);
     if (!location.pathname.endsWith('/accounts') && !location.pathname.endsWith('/accounts.html')) {
       location.replace(`${location.origin}/accounts`);
       return;
@@ -23,7 +26,7 @@
   let language = localStorage.getItem(languageKey) || (navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en');
   const apiKey = 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93';
   const headers = accessToken => ({ apikey: apiKey, Authorization: `Bearer ${accessToken || apiKey}`, 'Content-Type': 'application/json' });
-  const label = signedIn => signedIn ? (language === 'ja' ? '● ログイン中' : '● Signed in') : 'Accounts';
+  const label = signedIn => signedIn ? (language === 'ja' ? '● ログイン中' : '● Signed in') : (language === 'ja' ? 'Accounts / ログイン' : 'Accounts / Sign in');
   const addShortcut = (signedIn = false, email = '') => {
     document.querySelectorAll('[data-account-shortcut]').forEach(node => node.remove());
     const link = document.createElement('a');

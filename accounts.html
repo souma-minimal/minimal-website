@@ -31,11 +31,34 @@
         </div>
         <div class="account-access" data-account-access>
           <div class="account-mark" aria-hidden="true"><span>minimal.</span><i></i></div>
-          <form class="account-form" data-account-form novalidate>
-            <label for="account-email"><span class="lang-ja">メールアドレス</span><span class="lang-en">EMAIL ADDRESS</span></label>
-            <div class="account-form-row"><input id="account-email" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com"><button type="submit"><span class="lang-ja">リンクを送る</span><span class="lang-en">SEND LINK</span></button></div>
-            <p class="account-form-help"><span class="lang-ja">パスワードは不要です。メールに届く一度だけのリンクでログインします。</span><span class="lang-en">No password. Sign in with a one-time link sent to your email.</span></p>
-          </form>
+          <div class="account-auth" data-account-auth>
+            <div class="account-auth-tabs" role="tablist" aria-label="Account access">
+              <button type="button" role="tab" aria-selected="true" data-account-mode="login"><span class="lang-ja">ログイン</span><span class="lang-en">SIGN IN</span></button>
+              <button type="button" role="tab" aria-selected="false" data-account-mode="signup"><span class="lang-ja">登録</span><span class="lang-en">CREATE ACCOUNT</span></button>
+            </div>
+            <form class="account-form" data-account-form novalidate>
+              <label for="account-email"><span class="lang-ja">メールアドレス</span><span class="lang-en">EMAIL ADDRESS</span></label>
+              <input id="account-email" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com">
+              <label for="account-password"><span class="lang-ja">パスワード</span><span class="lang-en">PASSWORD</span></label>
+              <input id="account-password" name="password" type="password" autocomplete="current-password" required minlength="12" placeholder="••••••••••••">
+              <div data-account-confirm-wrap hidden>
+                <label for="account-password-confirm"><span class="lang-ja">パスワード（確認）</span><span class="lang-en">CONFIRM PASSWORD</span></label>
+                <input id="account-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="12" placeholder="••••••••••••">
+              </div>
+              <button class="account-submit" type="submit"><span data-account-submit-ja>ログイン</span><span data-account-submit-en>SIGN IN</span></button>
+              <p class="account-form-help" data-account-form-help><span class="lang-ja">メールアドレスとパスワードでログインします。</span><span class="lang-en">Sign in with your email address and password.</span></p>
+              <button class="account-recovery-link" type="button" data-account-recovery><span class="lang-ja">パスワードを忘れた／初めて設定する</span><span class="lang-en">FORGOT OR NEED TO SET A PASSWORD?</span></button>
+            </form>
+            <form class="account-reset-form" data-account-reset-form hidden novalidate>
+              <p class="account-reset-title"><span class="lang-ja">新しいパスワードを設定</span><span class="lang-en">SET A NEW PASSWORD</span></p>
+              <label for="account-reset-password"><span class="lang-ja">新しいパスワード</span><span class="lang-en">NEW PASSWORD</span></label>
+              <input id="account-reset-password" name="password" type="password" autocomplete="new-password" required minlength="12" placeholder="••••••••••••">
+              <label for="account-reset-confirm"><span class="lang-ja">パスワード（確認）</span><span class="lang-en">CONFIRM PASSWORD</span></label>
+              <input id="account-reset-confirm" name="passwordConfirm" type="password" autocomplete="new-password" required minlength="12" placeholder="••••••••••••">
+              <button class="account-submit" type="submit"><span class="lang-ja">パスワードを保存</span><span class="lang-en">SAVE PASSWORD</span></button>
+              <p class="account-form-help"><span class="lang-ja">この設定は一度だけです。以後はメールとパスワードでログインできます。</span><span class="lang-en">This is a one-time setup. Afterward, sign in with your email and password.</span></p>
+            </form>
+          </div>
           <div class="account-signed-in" data-account-signed-in hidden>
             <p class="account-signed-in-label"><span class="dot"></span><span class="lang-ja">ログイン中</span><span class="lang-en">SIGNED IN</span></p>
             <p class="account-signed-in-email" data-account-signed-in-email></p>
@@ -65,7 +88,7 @@
     <section class="section accounts-roadmap">
       <div class="accounts-roadmap-intro"><p class="label"><span class="lang-ja">最初のリリース</span><span class="lang-en">FIRST RELEASE</span></p><h2><span class="lang-ja">受け取りを、<br>迷わせない。</span><span class="lang-en">Make access<br>effortless.</span></h2></div>
       <ol>
-        <li><b>01</b><div><h3><span class="lang-ja">メールでログイン</span><span class="lang-en">Email sign-in</span></h3><p><span class="lang-ja">パスワードを増やさない、ワンタイムリンク方式。</span><span class="lang-en">A passwordless, one-time-link sign-in.</span></p></div><em><span class="lang-ja">利用可能</span><span class="lang-en">READY</span></em></li>
+        <li><b>01</b><div><h3><span class="lang-ja">メールとパスワードでログイン</span><span class="lang-en">Email and password sign-in</span></h3><p><span class="lang-ja">初回だけメールで確認。以後は、いつものログインで。</span><span class="lang-en">Confirm once by email, then sign in the familiar way.</span></p></div><em><span class="lang-ja">利用可能</span><span class="lang-en">READY</span></em></li>
         <li><b>02</b><div><h3><span class="lang-ja">購入済みライブラリ</span><span class="lang-en">Purchased library</span></h3><p><span class="lang-ja">Stripeの購入情報と連携して、対象商品のダウンロードを並べます。</span><span class="lang-en">Connect verified Stripe purchases to the downloads you own.</span></p></div><em><span class="lang-ja">その次</span><span class="lang-en">THEN</span></em></li>
         <li><b>03</b><div><h3><span class="lang-ja">アプリを一つに</span><span class="lang-en">One app identity</span></h3><p><span class="lang-ja">minimal Schedule、Todo、Financeを横断する共通アカウントへ。</span><span class="lang-en">A common identity for minimal Schedule, Todo and Finance.</span></p></div><em><span class="lang-ja">これから</span><span class="lang-en">LATER</span></em></li>
       </ol>
@@ -80,7 +103,7 @@
   </main>
   <footer class="site-footer"><div class="footer-brand">minimal.</div><p class="footer-bottom">Less, but better. © 2026 minimal. · Japan</p></footer>
   <script src="script.js"></script>
-  <script src="site-shell.js?v=20261011c"></script>
-  <script src="account.js?v=20261011c"></script>
+  <script src="site-shell.js?v=20261011d"></script>
+  <script src="account.js?v=20261011d"></script>
 </body>
 </html>
