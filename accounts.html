@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/favicon.png?v=2">
   <title>minimal Accounts — 一つのアカウントで、すべてを。</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="accounts.css">
+  <link rel="stylesheet" href="accounts.css?v=20261011e">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to content / 本文へ</a>
@@ -40,10 +40,10 @@
               <label for="account-email"><span class="lang-ja">メールアドレス</span><span class="lang-en">EMAIL ADDRESS</span></label>
               <input id="account-email" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com">
               <label for="account-password"><span class="lang-ja">パスワード</span><span class="lang-en">PASSWORD</span></label>
-              <input id="account-password" name="password" type="password" autocomplete="current-password" required minlength="12" placeholder="••••••••••••">
+              <input id="account-password" name="password" type="password" autocomplete="current-password" required minlength="10" placeholder="10文字以上">
               <div data-account-confirm-wrap hidden>
                 <label for="account-password-confirm"><span class="lang-ja">パスワード（確認）</span><span class="lang-en">CONFIRM PASSWORD</span></label>
-                <input id="account-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="12" placeholder="••••••••••••">
+                <input id="account-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="10" placeholder="もう一度入力">
               </div>
               <button class="account-submit" type="submit"><span data-account-submit-ja>ログイン</span><span data-account-submit-en>SIGN IN</span></button>
               <p class="account-form-help" data-account-form-help><span class="lang-ja">メールアドレスとパスワードでログインします。</span><span class="lang-en">Sign in with your email address and password.</span></p>
@@ -52,12 +52,13 @@
             <form class="account-reset-form" data-account-reset-form hidden novalidate>
               <p class="account-reset-title"><span class="lang-ja">新しいパスワードを設定</span><span class="lang-en">SET A NEW PASSWORD</span></p>
               <label for="account-reset-password"><span class="lang-ja">新しいパスワード</span><span class="lang-en">NEW PASSWORD</span></label>
-              <input id="account-reset-password" name="password" type="password" autocomplete="new-password" required minlength="12" placeholder="••••••••••••">
+              <input id="account-reset-password" name="password" type="password" autocomplete="new-password" required minlength="10" placeholder="10文字以上">
               <label for="account-reset-confirm"><span class="lang-ja">パスワード（確認）</span><span class="lang-en">CONFIRM PASSWORD</span></label>
-              <input id="account-reset-confirm" name="passwordConfirm" type="password" autocomplete="new-password" required minlength="12" placeholder="••••••••••••">
+              <input id="account-reset-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="10" placeholder="もう一度入力">
               <button class="account-submit" type="submit"><span class="lang-ja">パスワードを保存</span><span class="lang-en">SAVE PASSWORD</span></button>
-              <p class="account-form-help"><span class="lang-ja">この設定は一度だけです。以後はメールとパスワードでログインできます。</span><span class="lang-en">This is a one-time setup. Afterward, sign in with your email and password.</span></p>
+              <p class="account-form-help"><span class="lang-ja">10文字以上で設定してください。以後はメールとパスワードでログインできます。</span><span class="lang-en">Use at least 10 characters. Afterward, sign in with your email and password.</span></p>
             </form>
+            <div class="account-feedback" data-account-feedback aria-live="polite" hidden></div>
           </div>
           <div class="account-signed-in" data-account-signed-in hidden>
             <p class="account-signed-in-label"><span class="dot"></span><span class="lang-ja">ログイン中</span><span class="lang-en">SIGNED IN</span></p>
@@ -104,6 +105,6 @@
   <footer class="site-footer"><div class="footer-brand">minimal.</div><p class="footer-bottom">Less, but better. © 2026 minimal. · Japan</p></footer>
   <script src="script.js"></script>
   <script src="site-shell.js?v=20261011d"></script>
-  <script src="account.js?v=20261011d"></script>
+  <script src="account.js?v=20261011e"></script>
 </body>
 </html>

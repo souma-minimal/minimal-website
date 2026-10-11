@@ -8,6 +8,7 @@
   const form = document.querySelector('[data-account-form]');
   const resetForm = document.querySelector('[data-account-reset-form]');
   const status = document.querySelector('[data-account-status]');
+  const feedback = document.querySelector('[data-account-feedback]');
   const library = document.querySelector('[data-account-library]');
   const libraryItems = document.querySelector('[data-account-library-items]');
   const userLine = document.querySelector('[data-account-user]');
@@ -20,11 +21,15 @@
   const submitJa = document.querySelector('[data-account-submit-ja]');
   const submitEn = document.querySelector('[data-account-submit-en]');
   const formHelp = document.querySelector('[data-account-form-help]');
-  if (!form || !resetForm || !status || !library || !libraryItems || !userLine || !signOut || !signedIn || !signedInEmail) return;
+  if (!form || !resetForm || !status || !feedback || !library || !libraryItems || !userLine || !signOut || !signedIn || !signedInEmail) return;
 
   let mode = 'login';
   const language = () => document.documentElement.dataset.uiLanguage === 'en' ? 'en' : 'ja';
-  const message = (ja, en) => { status.innerHTML = `<span class="dot"></span><span>${language() === 'en' ? en : ja}</span>`; };
+  const message = (ja, en, type = 'error') => {
+    feedback.hidden = false;
+    feedback.classList.toggle('is-info', type === 'info');
+    feedback.textContent = language() === 'en' ? en : ja;
+  };
   const authHeaders = (token) => ({ apikey: config.publishableKey, Authorization: `Bearer ${token || config.publishableKey}`, 'Content-Type': 'application/json' });
   const request = async (path, options = {}, token) => {
     const response = await fetch(`${config.url}${path}`, { ...options, headers: { ...authHeaders(token), ...(options.headers || {}) } });
@@ -74,7 +79,7 @@
     libraryItems.innerHTML = !purchases.length
       ? `<p class="account-empty"><span class="lang-ja">まだライブラリに商品はありません。これからこのメールアドレスで購入した商品は、ここに並びます。</span><span class="lang-en">Nothing is in your library yet. Products purchased with this email will appear here.</span></p>`
       : purchases.map((purchase) => `<article><span>${productName(purchase.product_key)}</span><small>${new Date(purchase.granted_at).toLocaleDateString()}</small></article>`).join('');
-    message('ログインしました。あなたのライブラリを確認できます。', 'You are signed in. Your library is ready.');
+    feedback.hidden = true;
   };
   const showError = (error) => { const detail = error?.message || ''; message(`完了できませんでした。入力内容を確認してもう一度お試しください。${detail ? ` (${detail})` : ''}`, `We could not complete that. Check your details and try again.${detail ? ` (${detail})` : ''}`); };
   const setMode = (nextMode) => {
@@ -87,10 +92,11 @@
     submitJa.textContent = signup ? '登録してメールを確認' : 'ログイン';
     submitEn.textContent = signup ? 'CREATE & VERIFY EMAIL' : 'SIGN IN';
     formHelp.innerHTML = signup
-      ? '<span class="lang-ja">初回だけ確認メールを送ります。メール内のリンクを開けば登録完了です。</span><span class="lang-en">We send one confirmation email. Open its link once to finish registering.</span>'
+      ? '<span class="lang-ja">10文字以上で設定してください。初回だけ確認メールを送ります。</span><span class="lang-en">Use at least 10 characters. We send one confirmation email.</span>'
       : '<span class="lang-ja">メールアドレスとパスワードでログインします。</span><span class="lang-en">Sign in with your email address and password.</span>';
+    feedback.hidden = true;
   };
-  const passwordMatches = (password, confirmation) => password.length >= 12 && password === confirmation;
+  const passwordMatches = (password, confirmation) => password.length >= 10 && password === confirmation;
 
   modeButtons.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.accountMode)));
   form.addEventListener('submit', async (event) => {
@@ -100,17 +106,17 @@
     const password = values.get('password') || '';
     const confirmation = values.get('passwordConfirm') || '';
     if (!email || !password) return;
-    if (mode === 'signup' && !passwordMatches(password, confirmation)) { message('パスワードは12文字以上にし、確認用と同じものを入力してください。', 'Use at least 12 characters and make both passwords match.'); return; }
+    if (mode === 'signup' && !passwordMatches(password, confirmation)) { message('パスワードは10文字以上にし、確認用と同じものを入力してください。', 'Use at least 10 characters and make both passwords match.'); return; }
     const button = form.querySelector('.account-submit');
     button.disabled = true;
     try {
       if (mode === 'signup') {
-        message('登録メールを送信しています…', 'Sending your confirmation email…');
+        message('登録メールを送信しています…', 'Sending your confirmation email…', 'info');
         await request('/auth/v1/signup', { method: 'POST', body: JSON.stringify({ email, password, data: {}, redirect_to: `${location.origin}/accounts` }) });
         form.reset();
-        message('確認メールを送りました。メール内のリンクを一度だけ開くと登録が完了します。以後はメールとパスワードでログインできます。', 'We sent a confirmation email. Open its link once to finish. After that, sign in with your email and password.');
+        message('確認メールを送りました。メール内のリンクを一度だけ開くと登録が完了します。以後はメールとパスワードでログインできます。', 'We sent a confirmation email. Open its link once to finish. After that, sign in with your email and password.', 'info');
       } else {
-        message('ログインしています…', 'Signing you in…');
+        message('ログインしています…', 'Signing you in…', 'info');
         const session = await request('/auth/v1/token?grant_type=password', { method: 'POST', body: JSON.stringify({ email, password }) });
         form.reset();
         await renderLibrary(storeSession(session));
@@ -123,7 +129,7 @@
     recoveryButton.disabled = true;
     try {
       await request('/auth/v1/recover', { method: 'POST', body: JSON.stringify({ email, redirect_to: `${location.origin}/accounts` }) });
-      message('パスワード設定用のメールを送りました。リンクを開いて新しいパスワードを設定してください。', 'We sent a password setup email. Open the link to set a new password.');
+      message('パスワード設定用のメールを送りました。リンクを開いて新しいパスワードを設定してください。', 'We sent a password setup email. Open the link to set a new password.', 'info');
     } catch (error) { showError(error); } finally { recoveryButton.disabled = false; }
   });
   resetForm.addEventListener('submit', async (event) => {
@@ -131,7 +137,7 @@
     const values = new FormData(resetForm);
     const password = values.get('password') || '';
     const confirmation = values.get('passwordConfirm') || '';
-    if (!passwordMatches(password, confirmation)) { message('パスワードは12文字以上にし、確認用と同じものを入力してください。', 'Use at least 12 characters and make both passwords match.'); return; }
+    if (!passwordMatches(password, confirmation)) { message('パスワードは10文字以上にし、確認用と同じものを入力してください。', 'Use at least 10 characters and make both passwords match.'); return; }
     const button = resetForm.querySelector('.account-submit');
     button.disabled = true;
     try {
@@ -140,21 +146,21 @@
       await request('/auth/v1/user', { method: 'PUT', body: JSON.stringify({ password }) }, token);
       resetForm.reset();
       await renderLibrary(token);
-      message('パスワードを設定しました。次回からメールとパスワードでログインできます。', 'Your password is set. Next time, sign in with your email and password.');
+      message('パスワードを設定しました。次回からメールとパスワードでログインできます。', 'Your password is set. Next time, sign in with your email and password.', 'info');
     } catch (error) { showError(error); } finally { button.disabled = false; }
   });
   signOut.addEventListener('click', async () => {
     const accessToken = localStorage.getItem(tokenKey);
     if (accessToken) await request('/auth/v1/logout', { method: 'POST' }, accessToken).catch(() => null);
     localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); localStorage.removeItem(flowKey);
-    library.hidden = true; showAccessForm(); message('ログアウトしました。', 'You are signed out.');
+    library.hidden = true; showAccessForm(); message('ログアウトしました。', 'You are signed out.', 'info');
   });
 
   const callback = getCallbackSession();
   const accessToken = callback.token || localStorage.getItem(tokenKey);
   if (accessToken && callback.callbackType === 'recovery') {
     form.hidden = true; resetForm.hidden = false;
-    message('新しいパスワードを設定してください。', 'Set your new password.');
+    message('新しいパスワードを設定してください。', 'Set your new password.', 'info');
   } else if (accessToken) {
     renderLibrary(accessToken).catch(async () => {
       try { await renderLibrary(await refreshSession()); }
