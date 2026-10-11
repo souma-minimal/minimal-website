@@ -11,6 +11,13 @@ One passwordless account for every minimal product. It should let a customer fin
 3. Per-item downloads issued through the existing private R2 delivery endpoint.
 4. A minimal account record: stable user ID, email, creation time and consent timestamps only.
 
+## Current foundation
+
+- Supabase project: `minimal-accounts` (free plan, Northeast Asia).
+- Passwordless email provider is enabled. The only approved production redirect is `https://minimal-website-djl.pages.dev/accounts.html`.
+- `profiles` and `purchase_entitlements` have RLS enabled. Customers can read only their own records; browsers cannot create or change entitlements.
+- The public Accounts page can send magic links and show the signed-in customer's library. It intentionally shows no historical purchases until the verified Stripe-to-entitlement webhook exists.
+
 ## Security rules
 
 - Never trust a browser-provided product list or Stripe session ID as ownership proof.
@@ -21,4 +28,4 @@ One passwordless account for every minimal product. It should let a customer fin
 
 ## Required connection before real login
 
-Choose and connect an authentication provider that supports passwordless email links and server-side session verification. After it is connected, add its credentials as encrypted Cloudflare Pages secrets, then implement the login callback and private `/account` route.
+Implement a Stripe webhook that verifies `checkout.session.completed`, associates the purchase with the signed-in account (or securely supports a later claim), and writes the entitlement from a server-only environment. Never use a browser-provided product list or a Supabase secret key for this step.

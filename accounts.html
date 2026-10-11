@@ -23,15 +23,28 @@
 
   <main id="main-content">
     <section class="accounts-hero section">
-      <p class="eyebrow"><span class="lang-ja">MINIMAL ACCOUNTS / 準備中</span><span class="lang-en">MINIMAL ACCOUNTS / IN PROGRESS</span></p>
+      <p class="eyebrow"><span class="lang-ja">MINIMAL ACCOUNTS / あなたのライブラリ</span><span class="lang-en">MINIMAL ACCOUNTS / YOUR LIBRARY</span></p>
       <div class="accounts-hero-grid">
         <div>
           <h1><span class="lang-ja">ひとつのアカウントで、<br><span>すべてを整える。</span></span><span class="lang-en">One account.<br><span>Everything in place.</span></span></h1>
           <p class="accounts-lead"><span class="lang-ja">minimalで手に入れたものと、これから使うものを、静かにひとつへ。</span><span class="lang-en">A quiet home for what you own and what you will use next.</span></p>
         </div>
-        <div class="account-mark" aria-hidden="true"><span>m</span><i></i><i></i><i></i></div>
+        <div class="account-access" data-account-access>
+          <div class="account-mark" aria-hidden="true"><span>m</span><i></i><i></i><i></i></div>
+          <form class="account-form" data-account-form novalidate>
+            <label for="account-email"><span class="lang-ja">メールアドレス</span><span class="lang-en">EMAIL ADDRESS</span></label>
+            <div class="account-form-row"><input id="account-email" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com"><button type="submit"><span class="lang-ja">リンクを送る</span><span class="lang-en">SEND LINK</span></button></div>
+            <p class="account-form-help"><span class="lang-ja">パスワードは不要です。メールに届く一度だけのリンクでログインします。</span><span class="lang-en">No password. Sign in with a one-time link sent to your email.</span></p>
+          </form>
+        </div>
       </div>
-      <div class="accounts-note"><span class="dot"></span><span class="lang-ja">アカウント機能は現在準備中です。購入済みのダウンロードは、決済後に表示される受け取りページから利用できます。</span><span class="lang-en">Accounts are being prepared. Downloads remain available from the delivery page shown after checkout.</span></div>
+      <div class="accounts-note" data-account-status aria-live="polite"><span class="dot"></span><span class="lang-ja">ログインすると、これから購入した商品をここで受け取れるようになります。過去の購入履歴の連携は準備中です。</span><span class="lang-en">Sign in to make this your home for future purchases. Linking past purchases is being prepared.</span></div>
+    </section>
+
+    <section class="section account-library" data-account-library hidden>
+      <div class="account-library-head"><div><p class="label"><span class="lang-ja">あなたのライブラリ</span><span class="lang-en">YOUR LIBRARY</span></p><h2><span class="lang-ja">手に入れたもの。</span><span class="lang-en">What you own.</span></h2></div><button class="account-signout" type="button" data-account-signout><span class="lang-ja">ログアウト</span><span class="lang-en">Sign out</span></button></div>
+      <p class="account-user" data-account-user></p>
+      <div class="account-library-items" data-account-library-items></div>
     </section>
 
     <section class="section accounts-purpose">
@@ -46,7 +59,7 @@
     <section class="section accounts-roadmap">
       <div class="accounts-roadmap-intro"><p class="label"><span class="lang-ja">最初のリリース</span><span class="lang-en">FIRST RELEASE</span></p><h2><span class="lang-ja">受け取りを、<br>迷わせない。</span><span class="lang-en">Make access<br>effortless.</span></h2></div>
       <ol>
-        <li><b>01</b><div><h3><span class="lang-ja">メールでログイン</span><span class="lang-en">Email sign-in</span></h3><p><span class="lang-ja">パスワードを増やさない、ワンタイムリンク方式。</span><span class="lang-en">A passwordless, one-time-link sign-in.</span></p></div><em><span class="lang-ja">次の実装</span><span class="lang-en">NEXT</span></em></li>
+        <li><b>01</b><div><h3><span class="lang-ja">メールでログイン</span><span class="lang-en">Email sign-in</span></h3><p><span class="lang-ja">パスワードを増やさない、ワンタイムリンク方式。</span><span class="lang-en">A passwordless, one-time-link sign-in.</span></p></div><em><span class="lang-ja">利用可能</span><span class="lang-en">READY</span></em></li>
         <li><b>02</b><div><h3><span class="lang-ja">購入済みライブラリ</span><span class="lang-en">Purchased library</span></h3><p><span class="lang-ja">Stripeの購入情報と連携して、対象商品のダウンロードを並べます。</span><span class="lang-en">Connect verified Stripe purchases to the downloads you own.</span></p></div><em><span class="lang-ja">その次</span><span class="lang-en">THEN</span></em></li>
         <li><b>03</b><div><h3><span class="lang-ja">アプリを一つに</span><span class="lang-en">One app identity</span></h3><p><span class="lang-ja">minimal Schedule、Todo、Financeを横断する共通アカウントへ。</span><span class="lang-en">A common identity for minimal Schedule, Todo and Finance.</span></p></div><em><span class="lang-ja">これから</span><span class="lang-en">LATER</span></em></li>
       </ol>
@@ -61,5 +74,6 @@
   </main>
   <footer class="site-footer"><div class="footer-brand">minimal.</div><p class="footer-bottom">Less, but better. © 2026 minimal. · Japan</p></footer>
   <script src="script.js"></script>
+  <script src="account.js"></script>
 </body>
 </html>
