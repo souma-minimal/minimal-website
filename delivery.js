@@ -12,7 +12,7 @@
   };
 
   if (!sessionId) {
-    fail(copy('購入の確認リンクが見つかりません。Stripeの決済完了メールから、もう一度受け取りページを開いてください。', 'We could not find the purchase link. Open the delivery page again from your Stripe receipt.'));
+    fail(copy('購入情報が見つかりません。ライブラリから受け取り状況を確認してください。', 'We could not find this purchase. Check your library for delivery status.'));
     return;
   }
 
@@ -24,12 +24,15 @@
     .then(({ response, data }) => {
       if (!response.ok) throw new Error(data.error || copy('購入を確認できませんでした。', 'We could not verify this purchase.'));
       const files = requested ? data.files.filter(file => file.key.includes(requested)) : data.files;
-      if (!files.length) throw new Error(copy('この購入に対応するダウンロードが見つかりません。', 'No downloads were found for this purchase.'));
       if (status) status.textContent = copy(
-        data.library_updated ? '購入を確認し、ライブラリにも追加しました。下のボタンから原寸ファイルを保存できます。' : '購入を確認しました。下のボタンから原寸ファイルを保存できます。',
-        data.library_updated ? 'Purchase verified and added to your library. Use the buttons below to save your original files.' : 'Purchase verified. Use the buttons below to save your original files.'
+        files.length
+          ? (data.library_updated ? '購入を確認し、ライブラリにも追加しました。下のボタンから原寸ファイルを保存できます。' : '購入を確認しました。下のボタンから原寸ファイルを保存できます。')
+          : (data.library_updated ? '購入を確認し、ライブラリに追加しました。受け取り先は下のボタンから開けます。' : '購入を確認しました。受け取り先は下のボタンから開けます。'),
+        files.length
+          ? (data.library_updated ? 'Purchase verified and added to your library. Use the buttons below to save your original files.' : 'Purchase verified. Use the buttons below to save your original files.')
+          : (data.library_updated ? 'Purchase verified and added to your library. Open your item below.' : 'Purchase verified. Open your item below.')
       );
-      if (!list) return;
+      if (!list || !files.length) return;
       list.hidden = false;
       list.replaceChildren(...files.map(file => {
         const link = document.createElement('a');

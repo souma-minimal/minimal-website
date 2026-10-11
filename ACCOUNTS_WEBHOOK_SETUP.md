@@ -15,10 +15,10 @@ In **minimal-website → Settings → Variables and Secrets → Production**, ad
 | `STRIPE_WEBHOOK_SECRET` | encrypted secret | The `whsec_…` signing secret created for the endpoint below. |
 | `PRODUCT_ACCOUNT_ENTITLEMENTS` | plain text | A JSON map from Stripe **Price ID** to a minimal product key. |
 | `STRIPE_CHECKOUT_KEY` | encrypted secret | A Stripe **restricted key** that can create Checkout Sessions and read Prices. Keep the existing read-only `STRIPE_SECRET_KEY` for download verification. |
-| `RESEND_API_KEY` | encrypted secret | Resend API key used only for purchase-confirmation and delivery emails. |
-| `EMAIL_FROM` | plain text | A verified sender, for example `minimal. <hello@your-domain.com>`. |
+| `RESEND_API_KEY` | encrypted secret, optional | Leave unset for now. Add it later only when a verified custom sender domain is ready for purchase-confirmation emails. |
+| `EMAIL_FROM` | plain text, optional | Leave unset with `RESEND_API_KEY`. A verified sender such as `minimal. <hello@your-domain.com>` will be needed later. |
 | `PUBLIC_SITE_URL` | plain text | `https://minimal-website-djl.pages.dev` (or the final custom domain). |
-| `MINIMAL_SOCIAL_URL` | plain text | Optional destination for the email's Instagram / Threads link. Use a single public profile or link page. |
+| `MINIMAL_SOCIAL_URL` | plain text, optional | Needed only when purchase emails are enabled later. Use a single public profile or link page. |
 
 `STRIPE_SECRET_KEY` already exists and must remain a restricted key with Checkout Sessions read permission only. Never use a publishable key, service key, or full-secret `sk_…` key in the browser.
 

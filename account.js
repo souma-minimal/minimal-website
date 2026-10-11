@@ -87,11 +87,20 @@
     libraryItems.innerHTML = '<p class="account-empty"><span class="lang-ja">ライブラリを読み込んでいます…</span><span class="lang-en">Loading your library…</span></p>';
     // Entitlements are non-essential to authentication. Never make a member
     // wait for a database query before their signed-in state is visible.
-    void request('/rest/v1/purchase_entitlements?select=product_key,granted_at&order=granted_at.desc', {}, accessToken)
+    void request('/rest/v1/purchase_entitlements?select=product_key,granted_at,stripe_checkout_session_id&order=granted_at.desc', {}, accessToken)
       .then((purchases) => {
         libraryItems.innerHTML = !purchases.length
           ? `<p class="account-empty"><span class="lang-ja">まだライブラリに商品はありません。これからこのメールアドレスで購入した商品は、ここに並びます。</span><span class="lang-en">Nothing is in your library yet. Products purchased with this email will appear here.</span></p>`
-          : purchases.map((purchase) => `<article><span>${productName(purchase.product_key)}</span><small>${new Date(purchase.granted_at).toLocaleDateString()}</small></article>`).join('');
+          : purchases.map((purchase) => {
+            const isSchedule = purchase.product_key === 'minimal-schedule';
+            const receiveUrl = isSchedule
+              ? 'https://pointy-banjo-ec2.notion.site/minimal-Schedule-3f56585f3df380d4aa97dd49c6be32dd?source=copy_link'
+              : `wallpaper-download.html?session_id=${encodeURIComponent(purchase.stripe_checkout_session_id)}&item=${encodeURIComponent(purchase.product_key)}`;
+            const receiveText = isSchedule
+              ? '<span class="lang-ja">Notionで開く ↗</span><span class="lang-en">OPEN IN NOTION ↗</span>'
+              : '<span class="lang-ja">ダウンロード ↓</span><span class="lang-en">DOWNLOAD ↓</span>';
+            return `<article><div><strong>${productName(purchase.product_key)}</strong><small>${new Date(purchase.granted_at).toLocaleDateString()}</small></div><a class="account-library-action" href="${receiveUrl}"${isSchedule ? ' target="_blank" rel="noopener"' : ''}>${receiveText}</a></article>`;
+          }).join('');
       })
       .catch(() => {
         libraryItems.innerHTML = '<p class="account-empty"><span class="lang-ja">ライブラリを読み込めませんでした。ページを再読み込みしてください。</span><span class="lang-en">We could not load your library. Please refresh the page.</span></p>';

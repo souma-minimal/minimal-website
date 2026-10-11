@@ -77,13 +77,14 @@ export async function onRequestGet(context) {
   try {
     const rules = JSON.parse(context.env.PRODUCT_ENTITLEMENTS);
     const { checkout, lineItems } = await paidCheckout(sessionId, context.env.STRIPE_SECRET_KEY);
+    // A Notion template has no private R2 file, but it must still appear in
+    // minimal Accounts immediately after checkout.
+    const libraryUpdated = await synchroniseLibrary({ request: context.request, env: context.env, checkout, lineItems });
     const allowed = new Map();
     for (const line of lineItems) {
       const files = filesForPrice(rules, line.price?.id);
       for (const file of files) allowed.set(file.key, file);
     }
-    if (!allowed.size) return json({ error: 'This purchase does not include a downloadable wallpaper.' }, 403);
-    const libraryUpdated = await synchroniseLibrary({ request: context.request, env: context.env, checkout, lineItems });
     return json({ files: [...allowed.values()].map(file => ({ key: file.key, label: file.label })), library_updated: libraryUpdated });
   } catch (error) {
     return json({ error: error.message || 'Unable to verify this purchase.' }, 403);
