@@ -2,6 +2,8 @@
 
 This is required before a new Stripe purchase can automatically appear in minimal Accounts.
 
+The current checkout flow is account-bound: a visitor must sign in before a Stripe Checkout Session is created. The signed-in Account ID is set as Stripe's `client_reference_id`, so a completed payment can be added to the library without waiting for an email-address lookup.
+
 ## 1. Cloudflare Pages variables
 
 In **minimal-website → Settings → Variables and Secrets → Production**, add:
@@ -12,8 +14,13 @@ In **minimal-website → Settings → Variables and Secrets → Production**, ad
 | `SUPABASE_SERVICE_ROLE_KEY` | encrypted secret | The **Secret key** from Supabase → Settings → API Keys. Never use the publishable key here. |
 | `STRIPE_WEBHOOK_SECRET` | encrypted secret | The `whsec_…` signing secret created for the endpoint below. |
 | `PRODUCT_ACCOUNT_ENTITLEMENTS` | plain text | A JSON map from Stripe **Price ID** to a minimal product key. |
+| `STRIPE_CHECKOUT_KEY` | encrypted secret | A Stripe **restricted key** that can create Checkout Sessions and read Prices. Keep the existing read-only `STRIPE_SECRET_KEY` for download verification. |
+| `RESEND_API_KEY` | encrypted secret | Resend API key used only for purchase-confirmation and delivery emails. |
+| `EMAIL_FROM` | plain text | A verified sender, for example `minimal. <hello@your-domain.com>`. |
+| `PUBLIC_SITE_URL` | plain text | `https://minimal-website-djl.pages.dev` (or the final custom domain). |
+| `MINIMAL_SOCIAL_URL` | plain text | Optional destination for the email's Instagram / Threads link. Use a single public profile or link page. |
 
-`STRIPE_SECRET_KEY` already exists and must remain a restricted key with Checkout Sessions read permission only.
+`STRIPE_SECRET_KEY` already exists and must remain a restricted key with Checkout Sessions read permission only. Never use a publishable key, service key, or full-secret `sk_…` key in the browser.
 
 Example product map (replace every Price ID with the live ID from Stripe):
 
@@ -21,7 +28,9 @@ Example product map (replace every Price ID with the live ID from Stripe):
 {
   "price_123": "free-still-water",
   "price_456": "minimal-schedule",
-  "price_789": "terrain-dune"
+  "price_789": "terrain-dune",
+  "price_101": "nocturne-pack",
+  "price_102": "terrain-pack"
 }
 ```
 
@@ -40,10 +49,10 @@ Copy the endpoint's `whsec_…` signing secret into the Cloudflare `STRIPE_WEBHO
 
 ## 3. Test safely
 
-1. Sign in to minimal Accounts using the same email address that will be used at Stripe Checkout.
-2. Complete a **test-mode** Checkout, using a test-mode endpoint and test-mode configuration where possible.
-3. Verify the event delivery is `200` in Stripe and the product appears in the library.
-4. Only then configure the production endpoint/secrets and make a small real purchase or free Checkout verification.
+1. Sign in to minimal Accounts, choose the free wallpaper, and continue through the $0 Checkout.
+2. Verify the event delivery is `200` in Stripe and the product appears in the library immediately after the return page loads.
+3. Verify the purchase email arrives from `minimal.` with a library link and a direct file-download button.
+4. Repeat once with a **test-mode** paid Checkout before relying on a live paid product.
 
 ## How it is protected
 
@@ -52,3 +61,4 @@ Copy the endpoint's `whsec_…` signing secret into the Cloudflare `STRIPE_WEBHO
 - The server retrieves actual line items from Stripe rather than trusting a browser-provided product list.
 - The Supabase service key is an encrypted Cloudflare secret, never browser code.
 - The database uses a unique checkout-session/product pair, so retried Stripe events do not create duplicate access.
+- Purchase emails are sent only when the entitlement row was newly created, preventing duplicate webhook deliveries from sending duplicate thank-you emails.

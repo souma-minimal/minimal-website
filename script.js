@@ -101,7 +101,10 @@
     translate('[data-i18n="stripe-checkout"]', '安全に購入する <span aria-hidden="true">↗</span>');
     translate('.buy-page .product-note', 'Stripeによる安全な決済 · デジタル商品 · 物理商品の発送はありません<br>決済後すぐにNotionテンプレートを受け取れます。');
     const checkout = document.querySelector('[data-i18n="stripe-checkout"]');
-    if (checkout) checkout.href = 'https://buy.stripe.com/14A7sL1IU8hafiL17Y2kw04';
+    if (checkout) {
+      checkout.href = '#checkout';
+      checkout.dataset.checkoutProduct = 'minimal-schedule';
+    }
     const schedulePrice = document.querySelector('.buy-summary strong');
     if (schedulePrice) schedulePrice.textContent = '$7';
   }
@@ -115,18 +118,18 @@
 
   const wallpaperItems = {
     nocturne: [
-      { key: 'nocturne-arc', name: 'Arc', image: 'assets/wallpapers/social-samples/minimal-wallpaper-01-iphone-sample.png', url: 'https://buy.stripe.com/cNi4gzbjueFydaD03U2kw0c' },
-      { key: 'nocturne-sphere', name: 'Sphere', image: 'assets/wallpapers/social-samples/minimal-wallpaper-02-iphone-sample.png', url: 'https://buy.stripe.com/5kQaEX2MYeFygmP17Y2kw0d' },
-      { key: 'nocturne-monolith', name: 'Monolith', image: 'assets/wallpapers/social-samples/minimal-wallpaper-03-iphone-sample.png', url: 'https://buy.stripe.com/dRmbJ14V62WQ6Mf4ka2kw0e' },
-      { key: 'nocturne-light', name: 'Light', image: 'assets/wallpapers/social-samples/minimal-wallpaper-04-iphone-sample.png', url: 'https://buy.stripe.com/3cIdR92MY7d60nR2c22kw0f' }
+      { key: 'nocturne-arc', name: 'Arc', image: 'assets/wallpapers/social-samples/minimal-wallpaper-01-iphone-sample.png' },
+      { key: 'nocturne-sphere', name: 'Sphere', image: 'assets/wallpapers/social-samples/minimal-wallpaper-02-iphone-sample.png' },
+      { key: 'nocturne-monolith', name: 'Monolith', image: 'assets/wallpapers/social-samples/minimal-wallpaper-03-iphone-sample.png' },
+      { key: 'nocturne-light', name: 'Light', image: 'assets/wallpapers/social-samples/minimal-wallpaper-04-iphone-sample.png' }
     ],
     terrain: [
-      { key: 'terrain-dune', name: 'Dune', image: 'assets/wallpapers/social-samples/terrain-studies-01-dune-iphone-sample.png', url: 'https://buy.stripe.com/dRm28rcny54Y3A3g2S2kw06' },
-      { key: 'terrain-ridge', name: 'Ridge', image: 'assets/wallpapers/social-samples/terrain-studies-02-ridge-iphone-sample.png', url: 'https://buy.stripe.com/7sY3cv0EQ9le0nRaIy2kw07' },
-      { key: 'terrain-tide', name: 'Tide', image: 'assets/wallpapers/social-samples/terrain-studies-03-tide-iphone-sample.png', url: 'https://buy.stripe.com/fZudR9evG54Y9Yr3g62kw08' },
-      { key: 'terrain-stone', name: 'Stone', image: 'assets/wallpapers/social-samples/terrain-studies-04-stone-iphone-sample.png', url: 'https://buy.stripe.com/dRmdR9cny7d60nR03U2kw09' },
-      { key: 'terrain-moon', name: 'Moon', image: 'assets/wallpapers/social-samples/terrain-studies-05-moon-iphone-sample.png', url: 'https://buy.stripe.com/00wfZh1IUcxq0nRg2S2kw0a' },
-      { key: 'terrain-fog', name: 'Fog', image: 'assets/wallpapers/social-samples/terrain-studies-06-fog-iphone-sample.png', url: 'https://buy.stripe.com/5kQaEX87ibtm7Qj5oe2kw0b' }
+      { key: 'terrain-dune', name: 'Dune', image: 'assets/wallpapers/social-samples/terrain-studies-01-dune-iphone-sample.png' },
+      { key: 'terrain-ridge', name: 'Ridge', image: 'assets/wallpapers/social-samples/terrain-studies-02-ridge-iphone-sample.png' },
+      { key: 'terrain-tide', name: 'Tide', image: 'assets/wallpapers/social-samples/terrain-studies-03-tide-iphone-sample.png' },
+      { key: 'terrain-stone', name: 'Stone', image: 'assets/wallpapers/social-samples/terrain-studies-04-stone-iphone-sample.png' },
+      { key: 'terrain-moon', name: 'Moon', image: 'assets/wallpapers/social-samples/terrain-studies-05-moon-iphone-sample.png' },
+      { key: 'terrain-fog', name: 'Fog', image: 'assets/wallpapers/social-samples/terrain-studies-06-fog-iphone-sample.png' }
     ]
   };
 
@@ -134,19 +137,20 @@
   chooserStyle.textContent = `.wallpaper-selector{border-top:1px solid var(--line);padding:42px 0 76px}.wallpaper-selector-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:22px}.wallpaper-selector h2{font-size:clamp(30px,4vw,54px);letter-spacing:-.06em;line-height:.95;margin:0}.wallpaper-selector .selector-note{font-size:12px;color:var(--muted);max-width:360px;line-height:1.55;margin:0}.wallpaper-choice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.wallpaper-choice{border:1px solid var(--line);padding:12px;background:transparent;text-align:left;color:inherit;cursor:pointer}.wallpaper-choice:hover,.wallpaper-choice[aria-pressed=true]{border-color:#111;background:#f3f3f0}.wallpaper-choice img{display:block;width:100%;aspect-ratio:9/15;object-fit:cover;background:#191919;margin-bottom:11px}.wallpaper-choice strong{font-size:13px;letter-spacing:.03em}.wallpaper-choice span{display:block;margin-top:5px;font-size:10px;letter-spacing:.08em;color:var(--muted)}.wallpaper-selector-actions{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:22px;border-top:1px solid var(--line);padding-top:20px}.wallpaper-selector-actions p{font-size:11px;line-height:1.5;color:var(--muted);margin:0}.wallpaper-selector-actions .buy-button{min-width:210px;justify-content:space-between}.bundle-link{font-size:12px;color:inherit;text-underline-offset:5px}@media(max-width:700px){.wallpaper-selector{padding:35px 0 60px}.wallpaper-selector-head{display:block}.wallpaper-selector .selector-note{margin-top:14px}.wallpaper-choice-grid{grid-template-columns:repeat(2,1fr);gap:8px}.wallpaper-selector-actions{align-items:stretch;flex-direction:column}.wallpaper-selector-actions .buy-button{width:100%}}`;
   document.head.appendChild(chooserStyle);
 
-  const addWallpaperChooser = (type, bundleUrl, bundlePrice) => {
+  const addWallpaperChooser = (type, bundleKey, bundlePrice) => {
     const source = document.querySelector(type === 'terrain' ? '.terrain-grid' : '.wallpaper-grid');
     if (!source) return;
     const items = wallpaperItems[type];
     let selected = items[0];
     const chooser = document.createElement('section');
     chooser.className = 'section wallpaper-selector';
-    chooser.innerHTML = `<div class="wallpaper-selector-head"><div><p class="eyebrow">CHOOSE ONE / 1枚から選ぶ</p><h2>Choose the one<br>you want to keep.</h2></div><p class="selector-note">Each wallpaper is $1.49. Choose one, then continue to secure checkout. The full set is also available below.</p></div><div class="wallpaper-choice-grid">${items.map((item, index) => `<button class="wallpaper-choice" type="button" data-wallpaper-key="${item.key}" aria-pressed="${index === 0}"><img src="${item.image}" alt="${item.name} wallpaper preview"><strong>${item.name}</strong><span>$1.49 · DIGITAL DOWNLOAD</span></button>`).join('')}</div><div class="wallpaper-selector-actions"><p class="selected-wallpaper">${selected.name} selected · $1.49</p><a class="buy-button" href="${selected.url}" data-selected-wallpaper>Buy ${selected.name} — $1.49 <span aria-hidden="true">↗</span></a><a class="bundle-link" href="${bundleUrl}">Get all ${items.length} — $${bundlePrice} ↗</a></div>`;
+    chooser.innerHTML = `<div class="wallpaper-selector-head"><div><p class="eyebrow">CHOOSE ONE / 1枚から選ぶ</p><h2>Choose the one<br>you want to keep.</h2></div><p class="selector-note">Each wallpaper is $1.49. Sign in once, then continue to secure checkout. The full set is also available below.</p></div><div class="wallpaper-choice-grid">${items.map((item, index) => `<button class="wallpaper-choice" type="button" data-wallpaper-key="${item.key}" aria-pressed="${index === 0}"><img src="${item.image}" alt="${item.name} wallpaper preview"><strong>${item.name}</strong><span>$1.49 · DIGITAL DOWNLOAD</span></button>`).join('')}</div><div class="wallpaper-selector-actions"><p class="selected-wallpaper">${selected.name} selected · $1.49</p><a class="buy-button" href="#checkout" data-selected-wallpaper data-checkout-product="${selected.key}">Buy ${selected.name} — $1.49 <span aria-hidden="true">↗</span></a><a class="bundle-link" href="#checkout" data-checkout-product="${bundleKey}">Get all ${items.length} — $${bundlePrice} ↗</a></div>`;
     source.insertAdjacentElement('afterend', chooser);
     const refresh = () => {
       chooser.querySelector('.selected-wallpaper').textContent = `${selected.name} selected · $1.49`;
       const link = chooser.querySelector('[data-selected-wallpaper]');
-      link.href = selected.url;
+      link.href = '#checkout';
+      link.dataset.checkoutProduct = selected.key;
       link.innerHTML = `Buy ${selected.name} — $1.49 <span aria-hidden="true">↗</span>`;
       chooser.querySelectorAll('.wallpaper-choice').forEach((choice) => choice.setAttribute('aria-pressed', String(choice.dataset.wallpaperKey === selected.key)));
     };
@@ -161,14 +165,14 @@
     document.querySelector('.wallpaper-price span').innerHTML = 'CHOOSE ONE · ONE-TIME PAYMENT<br>IPHONE WALLPAPER';
     const oldCta = document.querySelector('.wallpaper-cta');
     if (oldCta) oldCta.remove();
-    addWallpaperChooser('nocturne', 'https://buy.stripe.com/9B6dR95ZadBudaD9Eu2kw05', '3.99');
+    addWallpaperChooser('nocturne', 'nocturne-pack', '3.99');
   }
   if (location.pathname.endsWith('terrain.html') || location.pathname.endsWith('/terrain')) {
     document.querySelector('.terrain-price strong').textContent = '$1.49';
     document.querySelector('.terrain-price span').innerHTML = 'CHOOSE ONE · ONE-TIME PAYMENT<br>IPHONE WALLPAPER';
     const oldCta = document.querySelector('.terrain-cta');
     if (oldCta) oldCta.remove();
-    addWallpaperChooser('terrain', 'https://buy.stripe.com/3cI00j5Zabtm9YrcQG2kw0g', '4.99');
+    addWallpaperChooser('terrain', 'terrain-pack', '4.99');
   }
   if (location.pathname.endsWith('index.html') || location.pathname.endsWith('/')) {
     const heading = document.querySelector('.products-head h2');
@@ -185,7 +189,7 @@
       const card = document.createElement('article');
       card.className = 'product-card wallpaper-card';
       card.dataset.freeWallpaper = 'true';
-      card.innerHTML = `<div class="product-card-top"><p class="eyebrow">04 / FREE WALLPAPER</p><span class="status"><span class="lang-ja">無料配布</span><span class="lang-en">FREE</span></span></div><div class="wallpaper-card-preview device-card"><div class="wallpaper-gallery" aria-label="Still Water free wallpaper preview"><div class="gallery-phone"><img src="assets/wallpapers/free-still-water-iphone.png" alt="Still Water free monochrome iPhone wallpaper"><div class="mini-ui" aria-hidden="true"><b>9:41</b><small>MONDAY · OCT 21</small><div class="mini-icons"><i>◌</i><i>□</i><i>△</i><i>＋</i></div></div></div></div></div><div class="product-card-copy"><p class="product-use"><span class="lang-ja">まずは、静かな一枚から</span><span class="lang-en">A QUIET START</span></p><h3>Still Water</h3><p><span class="lang-ja">白とグレーだけで構成した、iPhone用の無料壁紙。minimalを初めて使うための一枚です。</span><span class="lang-en">One free monochrome wallpaper for iPhone. A quiet place to begin with minimal.</span></p><p class="product-includes"><span class="lang-ja">iPhone壁紙 1枚 / 無料 / 決済後すぐ受け取り</span><span class="lang-en">1 iPhone wallpaper · Free · Ready after checkout</span></p></div><div class="product-actions"><a class="text-action" href="https://buy.stripe.com/cNi9AT1IU6924E79Eu2kw0h"><span class="lang-ja">無料で受け取る</span><span class="lang-en">Get it free</span> ↗</a><a class="buy-button" href="https://buy.stripe.com/cNi9AT1IU6924E79Eu2kw0h"><span class="lang-ja">$0で入手する</span><span class="lang-en">Get it — $0</span> <span aria-hidden="true">↗</span></a></div>`;
+      card.innerHTML = `<div class="product-card-top"><p class="eyebrow">04 / FREE WALLPAPER</p><span class="status"><span class="lang-ja">無料配布</span><span class="lang-en">FREE</span></span></div><div class="wallpaper-card-preview device-card"><div class="wallpaper-gallery" aria-label="Still Water free wallpaper preview"><div class="gallery-phone"><img src="assets/wallpapers/free-still-water-iphone.png" alt="Still Water free monochrome iPhone wallpaper"><div class="mini-ui" aria-hidden="true"><b>9:41</b><small>MONDAY · OCT 21</small><div class="mini-icons"><i>◌</i><i>□</i><i>△</i><i>＋</i></div></div></div></div></div><div class="product-card-copy"><p class="product-use"><span class="lang-ja">まずは、静かな一枚から</span><span class="lang-en">A QUIET START</span></p><h3>Still Water</h3><p><span class="lang-ja">白とグレーだけで構成した、iPhone用の無料壁紙。minimalを初めて使うための一枚です。</span><span class="lang-en">One free monochrome wallpaper for iPhone. A quiet place to begin with minimal.</span></p><p class="product-includes"><span class="lang-ja">iPhone壁紙 1枚 / 無料 / 決済後すぐ受け取り</span><span class="lang-en">1 iPhone wallpaper · Free · Ready after checkout</span></p></div><div class="product-actions"><a class="text-action" href="#checkout" data-checkout-product="free-still-water"><span class="lang-ja">無料で受け取る</span><span class="lang-en">Get it free</span> ↗</a><a class="buy-button" href="#checkout" data-checkout-product="free-still-water"><span class="lang-ja">$0で入手する</span><span class="lang-en">Get it — $0</span> <span aria-hidden="true">↗</span></a></div>`;
       cards.append(card);
     }
   }

@@ -16,13 +16,19 @@
     return;
   }
 
-  fetch(`/api/entitlements?session_id=${encodeURIComponent(sessionId)}`, { cache: 'no-store' })
+  const token = localStorage.getItem('minimal-accounts-access-token');
+  fetch(`/api/entitlements?session_id=${encodeURIComponent(sessionId)}`, {
+    cache: 'no-store', headers: token ? { authorization: `Bearer ${token}` } : {}
+  })
     .then(response => response.json().then(data => ({ response, data })))
     .then(({ response, data }) => {
       if (!response.ok) throw new Error(data.error || copy('購入を確認できませんでした。', 'We could not verify this purchase.'));
       const files = requested ? data.files.filter(file => file.key.includes(requested)) : data.files;
       if (!files.length) throw new Error(copy('この購入に対応するダウンロードが見つかりません。', 'No downloads were found for this purchase.'));
-      if (status) status.textContent = copy('購入を確認しました。下のボタンから原寸ファイルを保存できます。', 'Purchase verified. Use the buttons below to save your original files.');
+      if (status) status.textContent = copy(
+        data.library_updated ? '購入を確認し、ライブラリにも追加しました。下のボタンから原寸ファイルを保存できます。' : '購入を確認しました。下のボタンから原寸ファイルを保存できます。',
+        data.library_updated ? 'Purchase verified and added to your library. Use the buttons below to save your original files.' : 'Purchase verified. Use the buttons below to save your original files.'
+      );
       if (!list) return;
       list.hidden = false;
       list.replaceChildren(...files.map(file => {

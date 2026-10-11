@@ -13,7 +13,7 @@ function filesForPrice(rules, priceId) {
     : file);
 }
 
-async function paidLineItems(sessionId, secret) {
+async function paidCheckout(sessionId, secret) {
   if (!/^[a-zA-Z0-9_]+$/.test(sessionId)) throw new Error('Invalid checkout session.');
   const auth = `Basic ${btoa(`${secret}:`)}`;
   const session = await fetch(`${stripeApi}/checkout/sessions/${sessionId}`, { headers: { authorization: auth } });
@@ -24,7 +24,47 @@ async function paidLineItems(sessionId, secret) {
   if (!isCompletedPurchase) throw new Error('Payment has not completed.');
   const items = await fetch(`${stripeApi}/checkout/sessions/${sessionId}/line_items?limit=100`, { headers: { authorization: auth } });
   if (!items.ok) throw new Error('Checkout line items were not found.');
-  return (await items.json()).data || [];
+  return { checkout, lineItems: (await items.json()).data || [] };
+}
+
+async function signedInUser(request, supabaseUrl, serviceRoleKey) {
+  const authorization = request.headers.get('authorization') || '';
+  if (!authorization.startsWith('Bearer ')) return null;
+  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: { apikey: serviceRoleKey, authorization }
+  });
+  return response.ok ? response.json() : null;
+}
+
+async function synchroniseLibrary({ request, env, checkout, lineItems }) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY || !env.PRODUCT_ACCOUNT_ENTITLEMENTS) return false;
+  const user = await signedInUser(request, env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  const owner = checkout.client_reference_id || checkout.metadata?.minimal_account_id;
+  if (!user?.id || !owner || user.id !== owner) return false;
+  let productMap;
+  try { productMap = JSON.parse(env.PRODUCT_ACCOUNT_ENTITLEMENTS); } catch { return false; }
+  const rows = lineItems
+    .map(line => ({ priceId: line.price?.id, productKey: productMap[line.price?.id] }))
+    .filter(line => line.priceId && line.productKey)
+    .map(line => ({
+      user_id: user.id,
+      stripe_checkout_session_id: checkout.id,
+      stripe_customer_id: checkout.customer || null,
+      stripe_price_id: line.priceId,
+      product_key: line.productKey
+    }));
+  if (!rows.length) return false;
+  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/purchase_entitlements?on_conflict=stripe_checkout_session_id,product_key`, {
+    method: 'POST',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      'content-type': 'application/json',
+      Prefer: 'resolution=ignore-duplicates,return=minimal'
+    },
+    body: JSON.stringify(rows)
+  });
+  return response.ok;
 }
 
 export async function onRequestGet(context) {
@@ -36,14 +76,15 @@ export async function onRequestGet(context) {
 
   try {
     const rules = JSON.parse(context.env.PRODUCT_ENTITLEMENTS);
-    const lineItems = await paidLineItems(sessionId, context.env.STRIPE_SECRET_KEY);
+    const { checkout, lineItems } = await paidCheckout(sessionId, context.env.STRIPE_SECRET_KEY);
     const allowed = new Map();
     for (const line of lineItems) {
       const files = filesForPrice(rules, line.price?.id);
       for (const file of files) allowed.set(file.key, file);
     }
     if (!allowed.size) return json({ error: 'This purchase does not include a downloadable wallpaper.' }, 403);
-    return json({ files: [...allowed.values()].map(file => ({ key: file.key, label: file.label })) });
+    const libraryUpdated = await synchroniseLibrary({ request: context.request, env: context.env, checkout, lineItems });
+    return json({ files: [...allowed.values()].map(file => ({ key: file.key, label: file.label })), library_updated: libraryUpdated });
   } catch (error) {
     return json({ error: error.message || 'Unable to verify this purchase.' }, 403);
   }
