@@ -112,7 +112,16 @@
     try {
       if (mode === 'signup') {
         message('登録メールを送信しています…', 'Sending your confirmation email…', 'info');
-        await request('/auth/v1/signup', { method: 'POST', body: JSON.stringify({ email, password, data: {}, redirect_to: `${location.origin}/accounts` }) });
+        const signup = await request('/auth/v1/signup', { method: 'POST', body: JSON.stringify({ email, password, data: {}, redirect_to: `${location.origin}/accounts` }) });
+        // Supabase deliberately returns a 200 response for an address that
+        // already exists. An empty identities array is the safe signal that no
+        // new account or confirmation email was created.
+        if (signup.user && Array.isArray(signup.user.identities) && signup.user.identities.length === 0) {
+          setMode('login');
+          form.elements.email.value = email;
+          message('このメールアドレスはすでに登録済みです。パスワードを設定していない場合は、下の「パスワードを忘れた／初めて設定する」を押してください。', 'This email already has an account. If you have not set a password, choose “Forgot or need to set a password?” below.', 'info');
+          return;
+        }
         form.reset();
         message('確認メールを送りました。メール内のリンクを一度だけ開くと登録が完了します。以後はメールとパスワードでログインできます。', 'We sent a confirmation email. Open its link once to finish. After that, sign in with your email and password.', 'info');
       } else {
