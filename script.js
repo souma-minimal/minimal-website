@@ -2,6 +2,15 @@
 // The copy is authored in Japanese and English so visitors never have to rely
 // on browser machine translation for product or purchase information.
 (() => {
+  // The public site intentionally serves only watermarked previews. Original
+  // files are delivered by the purchase-verified download endpoint instead.
+  document.querySelectorAll('img[src*="assets/wallpapers/"]').forEach((image) => {
+    const source = image.getAttribute('src');
+    if (!source || source.includes('/social-samples/')) return;
+    image.src = source.replace('assets/wallpapers/', 'assets/wallpapers/social-samples/').replace(/-iphone\.png$/, '-iphone-sample.png');
+    image.alt = `Watermarked preview — ${image.alt}`;
+  });
+
   const storageKey = 'minimal-language';
   const choices = document.querySelectorAll('[data-language-choice]');
   if (!choices.length) return;
@@ -99,18 +108,18 @@
 
   const wallpaperItems = {
     nocturne: [
-      { key: 'nocturne-arc', name: 'Arc', image: 'assets/wallpapers/minimal-wallpaper-01-iphone.png', url: 'https://buy.stripe.com/cNi4gzbjueFydaD03U2kw0c' },
-      { key: 'nocturne-sphere', name: 'Sphere', image: 'assets/wallpapers/minimal-wallpaper-02-iphone.png', url: 'https://buy.stripe.com/5kQaEX2MYeFygmP17Y2kw0d' },
-      { key: 'nocturne-monolith', name: 'Monolith', image: 'assets/wallpapers/minimal-wallpaper-03-iphone.png', url: 'https://buy.stripe.com/dRmbJ14V62WQ6Mf4ka2kw0e' },
-      { key: 'nocturne-light', name: 'Light', image: 'assets/wallpapers/minimal-wallpaper-04-iphone.png', url: 'https://buy.stripe.com/3cIdR92MY7d60nR2c22kw0f' }
+      { key: 'nocturne-arc', name: 'Arc', image: 'assets/wallpapers/social-samples/minimal-wallpaper-01-iphone-sample.png', url: 'https://buy.stripe.com/cNi4gzbjueFydaD03U2kw0c' },
+      { key: 'nocturne-sphere', name: 'Sphere', image: 'assets/wallpapers/social-samples/minimal-wallpaper-02-iphone-sample.png', url: 'https://buy.stripe.com/5kQaEX2MYeFygmP17Y2kw0d' },
+      { key: 'nocturne-monolith', name: 'Monolith', image: 'assets/wallpapers/social-samples/minimal-wallpaper-03-iphone-sample.png', url: 'https://buy.stripe.com/dRmbJ14V62WQ6Mf4ka2kw0e' },
+      { key: 'nocturne-light', name: 'Light', image: 'assets/wallpapers/social-samples/minimal-wallpaper-04-iphone-sample.png', url: 'https://buy.stripe.com/3cIdR92MY7d60nR2c22kw0f' }
     ],
     terrain: [
-      { key: 'terrain-dune', name: 'Dune', image: 'assets/wallpapers/terrain-studies-01-dune-iphone.png', url: 'https://buy.stripe.com/dRm28rcny54Y3A3g2S2kw06' },
-      { key: 'terrain-ridge', name: 'Ridge', image: 'assets/wallpapers/terrain-studies-02-ridge-iphone.png', url: 'https://buy.stripe.com/7sY3cv0EQ9le0nRaIy2kw07' },
-      { key: 'terrain-tide', name: 'Tide', image: 'assets/wallpapers/terrain-studies-03-tide-iphone.png', url: 'https://buy.stripe.com/fZudR9evG54Y9Yr3g62kw08' },
-      { key: 'terrain-stone', name: 'Stone', image: 'assets/wallpapers/terrain-studies-04-stone-iphone.png', url: 'https://buy.stripe.com/dRmdR9cny7d60nR03U2kw09' },
-      { key: 'terrain-moon', name: 'Moon', image: 'assets/wallpapers/terrain-studies-05-moon-iphone.png', url: 'https://buy.stripe.com/00wfZh1IUcxq0nRg2S2kw0a' },
-      { key: 'terrain-fog', name: 'Fog', image: 'assets/wallpapers/terrain-studies-06-fog-iphone.png', url: 'https://buy.stripe.com/5kQaEX87ibtm7Qj5oe2kw0b' }
+      { key: 'terrain-dune', name: 'Dune', image: 'assets/wallpapers/social-samples/terrain-studies-01-dune-iphone-sample.png', url: 'https://buy.stripe.com/dRm28rcny54Y3A3g2S2kw06' },
+      { key: 'terrain-ridge', name: 'Ridge', image: 'assets/wallpapers/social-samples/terrain-studies-02-ridge-iphone-sample.png', url: 'https://buy.stripe.com/7sY3cv0EQ9le0nRaIy2kw07' },
+      { key: 'terrain-tide', name: 'Tide', image: 'assets/wallpapers/social-samples/terrain-studies-03-tide-iphone-sample.png', url: 'https://buy.stripe.com/fZudR9evG54Y9Yr3g62kw08' },
+      { key: 'terrain-stone', name: 'Stone', image: 'assets/wallpapers/social-samples/terrain-studies-04-stone-iphone-sample.png', url: 'https://buy.stripe.com/dRmdR9cny7d60nR03U2kw09' },
+      { key: 'terrain-moon', name: 'Moon', image: 'assets/wallpapers/social-samples/terrain-studies-05-moon-iphone-sample.png', url: 'https://buy.stripe.com/00wfZh1IUcxq0nRg2S2kw0a' },
+      { key: 'terrain-fog', name: 'Fog', image: 'assets/wallpapers/social-samples/terrain-studies-06-fog-iphone-sample.png', url: 'https://buy.stripe.com/5kQaEX87ibtm7Qj5oe2kw0b' }
     ]
   };
 
