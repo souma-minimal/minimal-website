@@ -6,18 +6,10 @@ This site now has Cloudflare Pages Functions that verify a completed Stripe Chec
 
 1. In Cloudflare, create a private R2 bucket named `minimal-private-wallpapers`. Do not enable public access.
 2. Upload the original PNGs with these object keys:
-   - `wallpapers/nocturne-arc.png`
-   - `wallpapers/nocturne-sphere.png`
-   - `wallpapers/nocturne-monolith.png`
-   - `wallpapers/nocturne-light.png`
-   - `wallpapers/terrain-dune.png`
-   - `wallpapers/terrain-ridge.png`
-   - `wallpapers/terrain-tide.png`
-   - `wallpapers/terrain-stone.png`
-   - `wallpapers/terrain-moon.png`
-   - `wallpapers/terrain-fog.png`
+   - `wallpapers/minimal-wallpaper-01-iphone.png` through `wallpapers/minimal-wallpaper-04-iphone.png`
+   - `wallpapers/terrain-studies-01-dune-iphone.png` through `wallpapers/terrain-studies-06-fog-iphone.png`
 3. Cloudflare Dashboard → Workers & Pages → `minimal-website` → Settings → Bindings: add the R2 bucket as `WALLPAPER_FILES`.
-4. Settings → Variables and Secrets: add secret `STRIPE_SECRET_KEY` using the Stripe **live secret key** (`sk_live_...`). Never put this key in Git or in an HTML file.
+4. Settings → Variables and Secrets: add secret `STRIPE_SECRET_KEY` using a Stripe restricted key (`rk_live_...`) with Checkout Sessions read access. Never put this key in Git or in an HTML file.
 5. Add `PRODUCT_ENTITLEMENTS` as a JSON variable. Map each Stripe Price ID to the files a buyer is entitled to. Example:
 
 ```json

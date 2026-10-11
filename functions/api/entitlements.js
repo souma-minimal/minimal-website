@@ -7,6 +7,12 @@ function json(data, status = 200) {
   });
 }
 
+function filesForPrice(rules, priceId) {
+  return (rules[priceId] || []).map(file => typeof file === 'string'
+    ? { key: file, label: file.split('/').pop().replace(/-iphone\.png$/, '').replace(/-/g, ' ') }
+    : file);
+}
+
 async function paidLineItems(sessionId, secret) {
   if (!/^[a-zA-Z0-9_]+$/.test(sessionId)) throw new Error('Invalid checkout session.');
   const auth = `Basic ${btoa(`${secret}:`)}`;
@@ -31,7 +37,7 @@ export async function onRequestGet(context) {
     const lineItems = await paidLineItems(sessionId, context.env.STRIPE_SECRET_KEY);
     const allowed = new Map();
     for (const line of lineItems) {
-      const files = rules[line.price?.id] || [];
+      const files = filesForPrice(rules, line.price?.id);
       for (const file of files) allowed.set(file.key, file);
     }
     if (!allowed.size) return json({ error: 'This purchase does not include a downloadable wallpaper.' }, 403);

@@ -4,6 +4,12 @@ function message(text, status) {
   return new Response(text, { status, headers: { 'cache-control': 'no-store' } });
 }
 
+function filesForPrice(rules, priceId) {
+  return (rules[priceId] || []).map(file => typeof file === 'string'
+    ? { key: file, label: file.split('/').pop() }
+    : file);
+}
+
 async function paidLineItems(sessionId, secret) {
   if (!/^[a-zA-Z0-9_]+$/.test(sessionId)) throw new Error('Invalid checkout session.');
   const auth = `Basic ${btoa(`${secret}:`)}`;
@@ -28,7 +34,7 @@ export async function onRequestGet(context) {
   try {
     const rules = JSON.parse(context.env.PRODUCT_ENTITLEMENTS);
     const lineItems = await paidLineItems(sessionId, context.env.STRIPE_SECRET_KEY);
-    const hasAccess = lineItems.some(line => (rules[line.price?.id] || []).some(file => file.key === key));
+    const hasAccess = lineItems.some(line => filesForPrice(rules, line.price?.id).some(file => file.key === key));
     if (!hasAccess) return message('This purchase does not include this file.', 403);
     const object = await context.env.WALLPAPER_FILES.get(key);
     if (!object) return message('File not found.', 404);
