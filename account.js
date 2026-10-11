@@ -89,9 +89,13 @@
     // wait for a database query before their signed-in state is visible.
     void request('/rest/v1/purchase_entitlements?select=product_key,granted_at,stripe_checkout_session_id&order=granted_at.desc', {}, accessToken)
       .then((purchases) => {
-        libraryItems.innerHTML = !purchases.length
+        // Keep the full purchase history in the database for support and
+        // accounting, but show each owned product only once in the library.
+        // The newest successful checkout supplies the current delivery link.
+        const ownedProducts = [...new Map(purchases.map((purchase) => [purchase.product_key, purchase])).values()];
+        libraryItems.innerHTML = !ownedProducts.length
           ? `<p class="account-empty"><span class="lang-ja">まだライブラリに商品はありません。これからこのメールアドレスで購入した商品は、ここに並びます。</span><span class="lang-en">Nothing is in your library yet. Products purchased with this email will appear here.</span></p>`
-          : purchases.map((purchase) => {
+          : ownedProducts.map((purchase) => {
             const isSchedule = purchase.product_key === 'minimal-schedule';
             const receiveUrl = isSchedule
               ? 'https://pointy-banjo-ec2.notion.site/minimal-Schedule-3f56585f3df380d4aa97dd49c6be32dd?source=copy_link'
