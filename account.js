@@ -45,6 +45,20 @@
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).msg || 'Request failed');
     return response.status === 204 ? null : response.json();
   };
+  const refreshSession = async () => {
+    const refreshToken = localStorage.getItem(refreshKey);
+    if (!refreshToken) throw new Error('No refresh token');
+    const response = await fetch(`${config.url}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { apikey: config.publishableKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+    if (!response.ok) throw new Error('Could not refresh session');
+    const session = await response.json();
+    localStorage.setItem(tokenKey, session.access_token);
+    if (session.refresh_token) localStorage.setItem(refreshKey, session.refresh_token);
+    return session.access_token;
+  };
   const productName = (key) => ({
     'free-still-water': 'Still Water',
     'minimal-schedule': 'minimal Schedule',
@@ -102,7 +116,9 @@
       button.disabled = false;
     }
   });
-  signOut.addEventListener('click', () => {
+  signOut.addEventListener('click', async () => {
+    const accessToken = localStorage.getItem(tokenKey);
+    if (accessToken) await request('/auth/v1/logout', { method: 'POST' }, accessToken).catch(() => null);
     localStorage.removeItem(tokenKey);
     localStorage.removeItem(refreshKey);
     library.hidden = true;
@@ -111,9 +127,15 @@
     message('ログアウトしました。', 'You are signed out.');
   });
   const accessToken = getSessionFromHash() || localStorage.getItem(tokenKey);
-  if (accessToken) renderLibrary(accessToken).catch(() => {
-    localStorage.removeItem(tokenKey);
-    localStorage.removeItem(refreshKey);
-    showError();
-  });
+  if (accessToken) {
+    renderLibrary(accessToken).catch(async () => {
+      try {
+        await renderLibrary(await refreshSession());
+      } catch (error) {
+        localStorage.removeItem(tokenKey);
+        localStorage.removeItem(refreshKey);
+        showError(error);
+      }
+    });
+  }
 })();

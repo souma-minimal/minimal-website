@@ -35,6 +35,6 @@
   <script>
     (() => { const image = document.querySelector('#preview-image'), caption = document.querySelector('#preview-caption'); let motif = '01-dune'; const labels = {'01-dune':'01 / DUNE','02-ridge':'02 / RIDGE','03-tide':'03 / TIDE','04-stone':'04 / STONE','05-moon':'05 / MOON','06-fog':'06 / FOG'}; const render = () => { image.src = `assets/wallpapers/social-samples/terrain-studies-${motif}-iphone-sample.png`; image.alt = `Watermarked ${labels[motif].replace(/^\d+ \/ /,'')} wallpaper preview shown on an iPhone home screen`; caption.textContent = `${labels[motif]} · HOME SCREEN PREVIEW`; }; document.querySelectorAll('.motif').forEach(button => button.addEventListener('click', () => { motif = button.dataset.image; document.querySelectorAll('.motif').forEach(item => item.setAttribute('aria-pressed', item === button)); render(); })); })();
   </script>
-  <script src="script.js"></script><script src="site-shell.js"></script>
+  <script src="script.js"></script><script src="site-shell.js?v=20261011c"></script>
 </body>
 </html>

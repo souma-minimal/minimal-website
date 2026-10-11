@@ -21,7 +21,8 @@
   const accountUrl = 'accounts.html';
   const languageKey = 'minimal-language';
   let language = localStorage.getItem(languageKey) || (navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en');
-  const headers = { apikey: 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93', Authorization: `Bearer ${token || 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93'}` };
+  const apiKey = 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93';
+  const headers = accessToken => ({ apikey: apiKey, Authorization: `Bearer ${accessToken || apiKey}`, 'Content-Type': 'application/json' });
   const label = signedIn => signedIn ? (language === 'ja' ? '● ログイン中' : '● Signed in') : 'Accounts';
   const addShortcut = (signedIn = false, email = '') => {
     document.querySelectorAll('[data-account-shortcut]').forEach(node => node.remove());
@@ -31,7 +32,13 @@
     link.dataset.accountShortcut = 'true';
     link.setAttribute('aria-label', signedIn ? 'minimal Accounts: signed in' : 'minimal Accounts');
     if (email) link.title = email;
-    link.innerHTML = label(signedIn);
+    link.textContent = label(signedIn);
+    if (signedIn && email) {
+      const emailNode = document.createElement('span');
+      emailNode.className = 'account-shortcut-email';
+      emailNode.textContent = email;
+      link.append(emailNode);
+    }
     const header = document.querySelector('.header, .top');
     if (!header) return;
     const nav = header.querySelector('nav');
@@ -77,9 +84,29 @@
   addLanguageControl();
   addShortcut(false);
   if (!token) return;
-  fetch('https://etxroajblozqyjyvpcoo.supabase.co/auth/v1/user', { headers })
-    .then(response => response.ok ? response.json() : Promise.reject())
+  const refreshSession = async () => {
+    const refreshToken = localStorage.getItem(refreshKey);
+    if (!refreshToken) throw new Error('No refresh token');
+    const response = await fetch('https://etxroajblozqyjyvpcoo.supabase.co/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST', headers: headers(), body: JSON.stringify({ refresh_token: refreshToken })
+    });
+    if (!response.ok) throw new Error('Could not refresh session');
+    const session = await response.json();
+    localStorage.setItem(tokenKey, session.access_token);
+    if (session.refresh_token) localStorage.setItem(refreshKey, session.refresh_token);
+    return session.access_token;
+  };
+  const getUser = async () => {
+    let response = await fetch('https://etxroajblozqyjyvpcoo.supabase.co/auth/v1/user', { headers: headers(token) });
+    if (!response.ok) {
+      const refreshedAccessToken = await refreshSession();
+      response = await fetch('https://etxroajblozqyjyvpcoo.supabase.co/auth/v1/user', { headers: headers(refreshedAccessToken) });
+    }
+    if (!response.ok) throw new Error('No active session');
+    return response.json();
+  };
+  getUser()
     .then(user => { if (!user?.email) throw new Error('No user'); addShortcut(true, user.email); })
-    .catch(() => localStorage.removeItem(tokenKey));
+    .catch(() => { localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); });
   window.addEventListener('minimal-account-session', event => addShortcut(true, event.detail?.email || ''));
 })();
