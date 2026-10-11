@@ -1,6 +1,22 @@
 // Shared, non-sensitive account affordance for every minimal page.
 (() => {
   const tokenKey = 'minimal-accounts-access-token';
+  const refreshKey = 'minimal-accounts-refresh-token';
+  // If Supabase falls back to the Site URL, capture the implicit-flow token on
+  // whichever page received it and immediately continue to Accounts. This
+  // prevents a successful email sign-in from looking like a return to home.
+  const callbackHash = new URLSearchParams(location.hash.slice(1));
+  const callbackQuery = new URLSearchParams(location.search);
+  const callbackToken = callbackHash.get('access_token') || callbackQuery.get('access_token');
+  const callbackRefreshToken = callbackHash.get('refresh_token') || callbackQuery.get('refresh_token');
+  if (callbackToken) {
+    localStorage.setItem(tokenKey, callbackToken);
+    if (callbackRefreshToken) localStorage.setItem(refreshKey, callbackRefreshToken);
+    if (!location.pathname.endsWith('/accounts') && !location.pathname.endsWith('/accounts.html')) {
+      location.replace(`${location.origin}/accounts`);
+      return;
+    }
+  }
   const token = localStorage.getItem(tokenKey);
   const accountUrl = 'accounts.html';
   const languageKey = 'minimal-language';
