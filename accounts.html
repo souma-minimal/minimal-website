@@ -36,12 +36,18 @@
             <div class="account-form-row"><input id="account-email" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com"><button type="submit"><span class="lang-ja">リンクを送る</span><span class="lang-en">SEND LINK</span></button></div>
             <p class="account-form-help"><span class="lang-ja">パスワードは不要です。メールに届く一度だけのリンクでログインします。</span><span class="lang-en">No password. Sign in with a one-time link sent to your email.</span></p>
           </form>
+          <div class="account-signed-in" data-account-signed-in hidden>
+            <p class="account-signed-in-label"><span class="dot"></span><span class="lang-ja">ログイン中</span><span class="lang-en">SIGNED IN</span></p>
+            <p class="account-signed-in-email" data-account-signed-in-email></p>
+            <p><span class="lang-ja">下のライブラリに、これからこのメールアドレスで受け取った商品が並びます。</span><span class="lang-en">Products received with this email will appear in your library below.</span></p>
+            <a href="#account-library"><span class="lang-ja">ライブラリを見る ↓</span><span class="lang-en">VIEW LIBRARY ↓</span></a>
+          </div>
         </div>
       </div>
       <div class="accounts-note" data-account-status aria-live="polite"><span class="dot"></span><span class="lang-ja">ログインすると、これから購入した商品をここで受け取れるようになります。過去の購入履歴の連携は準備中です。</span><span class="lang-en">Sign in to make this your home for future purchases. Linking past purchases is being prepared.</span></div>
     </section>
 
-    <section class="section account-library" data-account-library hidden>
+    <section class="section account-library" id="account-library" data-account-library hidden>
       <div class="account-library-head"><div><p class="label"><span class="lang-ja">あなたのライブラリ</span><span class="lang-en">YOUR LIBRARY</span></p><h2><span class="lang-ja">手に入れたもの。</span><span class="lang-en">What you own.</span></h2></div><button class="account-signout" type="button" data-account-signout><span class="lang-ja">ログアウト</span><span class="lang-en">Sign out</span></button></div>
       <p class="account-user" data-account-user></p>
       <div class="account-library-items" data-account-library-items></div>

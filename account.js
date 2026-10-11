@@ -13,7 +13,9 @@
   const libraryItems = document.querySelector('[data-account-library-items]');
   const userLine = document.querySelector('[data-account-user]');
   const signOut = document.querySelector('[data-account-signout]');
-  if (!form || !status || !library || !libraryItems || !userLine || !signOut) return;
+  const signedIn = document.querySelector('[data-account-signed-in]');
+  const signedInEmail = document.querySelector('[data-account-signed-in-email]');
+  if (!form || !status || !library || !libraryItems || !userLine || !signOut || !signedIn || !signedInEmail) return;
 
   const language = () => document.documentElement.dataset.uiLanguage === 'en' ? 'en' : 'ja';
   const message = (ja, en) => {
@@ -59,6 +61,9 @@
     const purchases = await request('/rest/v1/purchase_entitlements?select=product_key,granted_at&order=granted_at.desc', {}, accessToken);
     library.hidden = false;
     userLine.textContent = user.email || '';
+    signedInEmail.textContent = user.email || '';
+    form.hidden = true;
+    signedIn.hidden = false;
     if (!purchases.length) {
       libraryItems.innerHTML = `<p class="account-empty"><span class="lang-ja">まだライブラリに商品はありません。これからこのメールアドレスで購入した商品は、ここに並びます。</span><span class="lang-en">Nothing is in your library yet. Products purchased with this email will appear here.</span></p>`;
     } else {
@@ -93,6 +98,8 @@
     localStorage.removeItem(tokenKey);
     localStorage.removeItem(refreshKey);
     library.hidden = true;
+    form.hidden = false;
+    signedIn.hidden = true;
     message('ログアウトしました。', 'You are signed out.');
   });
   const accessToken = getSessionFromHash() || localStorage.getItem(tokenKey);
