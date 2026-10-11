@@ -37,8 +37,20 @@
   const apiKey = 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93';
   const headers = accessToken => ({ apikey: apiKey, Authorization: `Bearer ${accessToken || apiKey}`, 'Content-Type': 'application/json' });
   const label = signedIn => signedIn ? (language === 'ja' ? '● ログイン中' : '● Signed in') : (language === 'ja' ? 'Accounts / ログイン' : 'Accounts / Sign in');
+  const signOut = async () => {
+    const accessToken = localStorage.getItem(tokenKey);
+    if (accessToken) {
+      await fetch('https://etxroajblozqyjyvpcoo.supabase.co/auth/v1/logout', { method: 'POST', headers: headers(accessToken) }).catch(() => null);
+    }
+    localStorage.removeItem(tokenKey);
+    localStorage.removeItem(refreshKey);
+    localStorage.removeItem(flowKey);
+    addShortcut(false);
+    window.dispatchEvent(new CustomEvent('minimal-account-signout'));
+  };
   const addShortcut = (signedIn = false, email = '') => {
     document.querySelectorAll('[data-account-shortcut]').forEach(node => node.remove());
+    document.querySelectorAll('[data-account-header-signout]').forEach(node => node.remove());
     const link = document.createElement('a');
     link.href = accountUrl;
     link.className = `account-shortcut${signedIn ? ' is-signed-in' : ''}`;
@@ -55,7 +67,18 @@
     const header = document.querySelector('.header, .top');
     if (!header) return;
     const nav = header.querySelector('nav');
-    if (nav) nav.append(link); else header.append(link);
+    const target = nav || header;
+    target.append(link);
+    if (signedIn) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'account-header-signout';
+      button.dataset.accountHeaderSignout = 'true';
+      button.textContent = language === 'ja' ? 'ログアウト' : 'Sign out';
+      button.setAttribute('aria-label', language === 'ja' ? 'minimal Accountsからログアウト' : 'Sign out of minimal Accounts');
+      button.addEventListener('click', () => { button.disabled = true; signOut().finally(() => { button.disabled = false; }); });
+      target.append(button);
+    }
   };
   const setText = (selector, ja, en) => {
     const node = document.querySelector(selector);

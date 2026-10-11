@@ -189,6 +189,11 @@
     localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); localStorage.removeItem(flowKey);
     library.hidden = true; showAccessForm(); message('ログアウトしました。', 'You are signed out.', 'info');
   });
+  window.addEventListener('minimal-account-signout', () => {
+    library.hidden = true;
+    showAccessForm();
+    message('ログアウトしました。', 'You are signed out.', 'info');
+  });
 
   (async () => {
     try {
