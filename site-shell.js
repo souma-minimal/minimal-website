@@ -116,8 +116,30 @@
     button.addEventListener('click', () => { language = language === 'ja' ? 'en' : 'ja'; localStorage.setItem(languageKey, language); translateDeliveryPage(); button.textContent = language === 'ja' ? 'EN' : '日本語'; });
     header.append(button);
   };
+  const addMobileMenu = () => {
+    const header = document.querySelector('.header');
+    const nav = header?.querySelector('nav');
+    if (!header || !nav || header.querySelector('[data-mobile-menu-toggle]')) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'mobile-menu-toggle';
+    button.dataset.mobileMenuToggle = 'true';
+    button.setAttribute('aria-label', language === 'ja' ? 'メニューを開く' : 'Open menu');
+    button.setAttribute('aria-expanded', 'false');
+    button.innerHTML = '<i></i><i></i>';
+    const close = () => { header.classList.remove('is-mobile-menu-open'); button.setAttribute('aria-expanded', 'false'); };
+    button.addEventListener('click', () => {
+      const open = !header.classList.contains('is-mobile-menu-open');
+      header.classList.toggle('is-mobile-menu-open', open);
+      button.setAttribute('aria-expanded', String(open));
+    });
+    nav.addEventListener('click', event => { if (event.target.closest('a,button')) close(); });
+    document.addEventListener('click', event => { if (!header.contains(event.target)) close(); });
+    header.append(button);
+  };
   translateDeliveryPage();
   addLanguageControl();
+  addMobileMenu();
   addShortcut(false);
   if (!token) return;
   const refreshSession = async () => {
