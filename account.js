@@ -42,12 +42,20 @@
     if (session.refresh_token) localStorage.setItem(refreshKey, session.refresh_token);
     return session.access_token;
   };
-  const getCallbackSession = () => {
+  const getCallbackSession = async () => {
     const hash = new URLSearchParams(location.hash.slice(1));
     const query = new URLSearchParams(location.search);
-    const accessToken = hash.get('access_token') || query.get('access_token');
+    const code = query.get('code');
+    let accessToken = hash.get('access_token') || query.get('access_token');
     const refreshToken = hash.get('refresh_token') || query.get('refresh_token');
-    const callbackType = hash.get('type') || query.get('type') || localStorage.getItem(flowKey);
+    // Supabase can return either an implicit-flow token in the URL fragment or
+    // a PKCE `code` query parameter. Supporting both keeps confirmation and
+    // password-recovery links reliable across dashboard and browser settings.
+    const callbackType = hash.get('type') || query.get('type') || query.get('flow') || localStorage.getItem(flowKey);
+    if (!accessToken && code) {
+      const session = await request('/auth/v1/token?grant_type=pkce', { method: 'POST', body: JSON.stringify({ auth_code: code }) });
+      accessToken = storeSession(session);
+    }
     if (!accessToken) return { token: null, callbackType };
     localStorage.setItem(tokenKey, accessToken);
     if (refreshToken) localStorage.setItem(refreshKey, refreshToken);
@@ -137,7 +145,12 @@
     if (!email) { message('先にメールアドレスを入力してください。', 'Enter your email address first.'); form.elements.email.focus(); return; }
     recoveryButton.disabled = true;
     try {
-      await request('/auth/v1/recover', { method: 'POST', body: JSON.stringify({ email, redirect_to: `${location.origin}/accounts` }) });
+      // Keep the intended screen even if a mail client removes Supabase's
+      // `type=recovery` parameter while opening the link.
+      localStorage.setItem(flowKey, 'recovery');
+      const redirect = new URL('/accounts', location.origin);
+      redirect.searchParams.set('flow', 'recovery');
+      await request('/auth/v1/recover', { method: 'POST', body: JSON.stringify({ email, redirect_to: redirect.toString() }) });
       message('パスワード設定用のメールを送りました。リンクを開いて新しいパスワードを設定してください。', 'We sent a password setup email. Open the link to set a new password.', 'info');
     } catch (error) { showError(error); } finally { recoveryButton.disabled = false; }
   });
@@ -165,15 +178,22 @@
     library.hidden = true; showAccessForm(); message('ログアウトしました。', 'You are signed out.', 'info');
   });
 
-  const callback = getCallbackSession();
-  const accessToken = callback.token || localStorage.getItem(tokenKey);
-  if (accessToken && callback.callbackType === 'recovery') {
-    form.hidden = true; resetForm.hidden = false;
-    message('新しいパスワードを設定してください。', 'Set your new password.', 'info');
-  } else if (accessToken) {
-    renderLibrary(accessToken).catch(async () => {
-      try { await renderLibrary(await refreshSession()); }
-      catch (error) { localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); showAccessForm(); showError(error); }
-    });
-  }
+  (async () => {
+    try {
+      const callback = await getCallbackSession();
+      const accessToken = callback.token || localStorage.getItem(tokenKey);
+      if (accessToken && callback.callbackType === 'recovery') {
+        form.hidden = true; resetForm.hidden = false;
+        message('新しいパスワードを設定してください。', 'Set your new password.', 'info');
+      } else if (accessToken) {
+        renderLibrary(accessToken).catch(async () => {
+          try { await renderLibrary(await refreshSession()); }
+          catch (error) { localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); showAccessForm(); showError(error); }
+        });
+      }
+    } catch (error) {
+      localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey);
+      showAccessForm(); showError(error);
+    }
+  })();
 })();

@@ -9,8 +9,9 @@
   const callbackHash = new URLSearchParams(location.hash.slice(1));
   const callbackQuery = new URLSearchParams(location.search);
   const callbackToken = callbackHash.get('access_token') || callbackQuery.get('access_token');
+  const callbackCode = callbackQuery.get('code');
   const callbackRefreshToken = callbackHash.get('refresh_token') || callbackQuery.get('refresh_token');
-  const callbackFlow = callbackHash.get('type') || callbackQuery.get('type');
+  const callbackFlow = callbackHash.get('type') || callbackQuery.get('type') || callbackQuery.get('flow');
   if (callbackToken) {
     localStorage.setItem(tokenKey, callbackToken);
     if (callbackRefreshToken) localStorage.setItem(refreshKey, callbackRefreshToken);
@@ -19,6 +20,15 @@
       location.replace(`${location.origin}/accounts`);
       return;
     }
+  }
+  // PKCE links contain a one-time code instead of a token. Preserve it while
+  // moving a Site URL fallback to Accounts, where account.js exchanges it.
+  if (callbackCode && !location.pathname.endsWith('/accounts') && !location.pathname.endsWith('/accounts.html')) {
+    const destination = new URL('/accounts', location.origin);
+    destination.searchParams.set('code', callbackCode);
+    if (callbackFlow) destination.searchParams.set('type', callbackFlow);
+    location.replace(destination.toString());
+    return;
   }
   const token = localStorage.getItem(tokenKey);
   const accountUrl = 'accounts.html';
