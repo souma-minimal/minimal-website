@@ -19,7 +19,9 @@ async function paidLineItems(sessionId, secret) {
   const session = await fetch(`${stripeApi}/checkout/sessions/${sessionId}`, { headers: { authorization: auth } });
   if (!session.ok) throw new Error('Checkout session was not found.');
   const checkout = await session.json();
-  if (checkout.payment_status !== 'paid') throw new Error('Payment has not completed.');
+  const isCompletedPurchase = checkout.payment_status === 'paid'
+    || (checkout.payment_status === 'no_payment_required' && checkout.amount_total === 0);
+  if (!isCompletedPurchase) throw new Error('Payment has not completed.');
   const items = await fetch(`${stripeApi}/checkout/sessions/${sessionId}/line_items?limit=100`, { headers: { authorization: auth } });
   if (!items.ok) throw new Error('Checkout line items were not found.');
   return (await items.json()).data || [];

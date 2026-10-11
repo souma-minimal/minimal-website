@@ -164,6 +164,8 @@
     addWallpaperChooser('terrain', 'https://buy.stripe.com/3cI00j5Zabtm9YrcQG2kw0g', '4.99');
   }
   if (location.pathname.endsWith('index.html') || location.pathname.endsWith('/')) {
+    const heading = document.querySelector('.products-head h2');
+    if (heading) heading.innerHTML = '<span class="lang-ja">今日から使える<br>4つのプロダクト。</span><span class="lang-en">Simple things.<br>Ready to use.</span>';
     document.querySelectorAll('.product-card').forEach((card) => {
       const title = card.querySelector('h3')?.textContent;
       const button = card.querySelector('.buy-button');
@@ -171,6 +173,14 @@
       if (title === 'minimal Schedule') button.innerHTML = '<span class="lang-ja">購入する — $7</span><span class="lang-en">Get it — $7</span> <span aria-hidden="true">↗</span>';
       if (title === 'Nocturne Pack' || title === 'Terrain Studies') button.innerHTML = '<span class="lang-ja">好きな1枚を選ぶ — $1.49〜</span><span class="lang-en">Choose one — from $1.49</span> <span aria-hidden="true">↗</span>';
     });
+    const cards = document.querySelector('.product-cards');
+    if (cards && !document.querySelector('[data-free-wallpaper]')) {
+      const card = document.createElement('article');
+      card.className = 'product-card wallpaper-card';
+      card.dataset.freeWallpaper = 'true';
+      card.innerHTML = `<div class="product-card-top"><p class="eyebrow">04 / FREE WALLPAPER</p><span class="status"><span class="lang-ja">無料配布</span><span class="lang-en">FREE</span></span></div><div class="wallpaper-card-preview device-card"><div class="wallpaper-gallery" aria-label="Still Water free wallpaper preview"><div class="gallery-phone"><img src="assets/wallpapers/free-still-water-iphone.png" alt="Still Water free monochrome iPhone wallpaper"><div class="mini-ui" aria-hidden="true"><b>9:41</b><small>MONDAY · OCT 21</small><div class="mini-icons"><i>◌</i><i>□</i><i>△</i><i>＋</i></div></div></div></div></div><div class="product-card-copy"><p class="product-use"><span class="lang-ja">まずは、静かな一枚から</span><span class="lang-en">A QUIET START</span></p><h3>Still Water</h3><p><span class="lang-ja">白とグレーだけで構成した、iPhone用の無料壁紙。minimalを初めて使うための一枚です。</span><span class="lang-en">One free monochrome wallpaper for iPhone. A quiet place to begin with minimal.</span></p><p class="product-includes"><span class="lang-ja">iPhone壁紙 1枚 / 無料 / 決済後すぐ受け取り</span><span class="lang-en">1 iPhone wallpaper · Free · Ready after checkout</span></p></div><div class="product-actions"><a class="text-action" href="https://buy.stripe.com/cNi9AT1IU6924E79Eu2kw0h"><span class="lang-ja">無料で受け取る</span><span class="lang-en">Get it free</span> ↗</a><a class="buy-button" href="https://buy.stripe.com/cNi9AT1IU6924E79Eu2kw0h"><span class="lang-ja">$0で入手する</span><span class="lang-en">Get it — $0</span> <span aria-hidden="true">↗</span></a></div>`;
+      cards.append(card);
+    }
   }
 
   choices.forEach((choice) => choice.addEventListener('click', () => setLanguage(choice.dataset.languageChoice)));
