@@ -53,16 +53,63 @@ def card(filename, eyebrow, headline, detail, label, japanese=False, sample=SAMP
     # Preview shows the product in use, while text says why it matters.
     planner_files = {"post-01.jpg", "post-02.jpg", "post-07.jpg", "post-08.jpg", "post-11.jpg", "post-12.jpg", "post-13.jpg"}
     if filename in planner_files:
-        # Show the planner concept itself instead of an unrelated wallpaper.
+        # Each planning post illustrates its *specific* everyday problem.  This
+        # avoids a generic repeated mockup while keeping the product legible.
         panel = (612, 570, 1008, 1124)
         draw.rounded_rectangle(panel, radius=20, fill=(18, 18, 18, 255))
-        labels = [("TODAY", "one next task"), ("THIS WEEK", "plans in view"), ("LATER", "ideas kept safe")]
-        y_card = 620
-        for heading, small in labels:
-            draw.rounded_rectangle((650, y_card, 970, y_card + 122), radius=13, fill=(247, 247, 243, 255))
-            draw.text((676, y_card + 23), heading, font=font(18, bold=True), fill=(30, 30, 30, 255))
-            draw.text((676, y_card + 62), small, font=font(18), fill=(93, 93, 89, 255))
-            y_card += 145
+        def white_box(x1, y1, x2, y2, heading, sub=""):
+            draw.rounded_rectangle((x1, y1, x2, y2), radius=13, fill=(247, 247, 243, 255))
+            draw.text((x1 + 22, y1 + 20), heading, font=font(17, bold=True), fill=(30, 30, 30, 255))
+            if sub:
+                draw.text((x1 + 22, y1 + 58), sub, font=font(16), fill=(93, 93, 89, 255))
+        if filename == "post-01.jpg":
+            # Repeated mental reminders become one trusted place.
+            white_box(650, 620, 970, 700, "reply to this", "an idea")
+            white_box(650, 724, 970, 804, "appointment", "something to buy")
+            draw.polygon([(800, 828), (832, 828), (816, 858)], fill=(220, 220, 215, 255))
+            draw.rounded_rectangle((650, 880, 970, 1008), radius=13, fill=(220, 220, 215, 255))
+            draw.text((674, 910), "ONE PLACE", font=font(18, bold=True), fill=(18, 18, 18, 255))
+            draw.text((674, 950), "plans · tasks · ideas", font=font(17), fill=(65, 65, 61, 255))
+        elif filename == "post-02.jpg":
+            # Three sources converge instead of adding another system.
+            white_box(650, 636, 798, 742, "PLANS")
+            white_box(822, 636, 970, 742, "TASKS")
+            white_box(736, 770, 884, 876, "IDEAS")
+            draw.line((724, 742, 810, 932), fill=(220, 220, 215, 255), width=4)
+            draw.line((896, 742, 810, 932), fill=(220, 220, 215, 255), width=4)
+            draw.line((810, 876, 810, 932), fill=(220, 220, 215, 255), width=4)
+            white_box(684, 948, 936, 1034, "ONE CALM PLACE")
+        elif filename == "post-07.jpg":
+            white_box(650, 630, 970, 734, "PLAN CHANGED", "this part can wait")
+            draw.line((672, 654, 948, 710), fill=(185, 185, 180, 255), width=3)
+            white_box(650, 780, 970, 918, "TODAY", "one next task")
+            draw.ellipse((672, 950, 700, 978), fill=(220, 220, 215, 255))
+            draw.text((720, 950), "return here", font=font(18, bold=True), fill=(225, 225, 222, 255))
+        elif filename == "post-08.jpg":
+            draw.text((664, 632), "WHEN PLANS MOVE", font=font(17, bold=True), fill=(225, 225, 222, 255))
+            white_box(650, 686, 970, 800, "SEE TODAY", "the next task")
+            draw.line((810, 824, 810, 886), fill=(225, 225, 222, 255), width=4)
+            white_box(650, 910, 970, 1024, "SAVE THE REST", "for later")
+        elif filename == "post-11.jpg":
+            draw.text((660, 628), "START HERE", font=font(18, bold=True), fill=(225, 225, 222, 255))
+            draw.text((660, 696), "01", font=font(78, bold=True), fill=(225, 225, 222, 255))
+            white_box(650, 820, 970, 952, "ONE TASK", "enough for today")
+        elif filename == "post-12.jpg":
+            draw.ellipse((660, 654, 716, 710), fill=(247, 247, 243, 255))
+            draw.text((678, 667), "1", font=font(19, bold=True), fill=(18, 18, 18, 255))
+            draw.text((742, 666), "START WITH TODAY", font=font(17, bold=True), fill=(225, 225, 222, 255))
+            draw.line((688, 730, 688, 806), fill=(225, 225, 222, 255), width=4)
+            draw.ellipse((660, 828, 716, 884), fill=(247, 247, 243, 255))
+            draw.text((678, 841), "2", font=font(19, bold=True), fill=(18, 18, 18, 255))
+            draw.text((742, 840), "SAVE THE REST", font=font(17, bold=True), fill=(225, 225, 222, 255))
+            draw.text((742, 878), "one safe place", font=font(16), fill=(178, 178, 174, 255))
+        else:  # post-13: write down next week rather than holding it in mind.
+            draw.text((660, 630), "NEXT WEEK", font=font(18, bold=True), fill=(225, 225, 222, 255))
+            for row in range(2):
+                for col in range(3):
+                    x, y = 660 + col * 104, 684 + row * 96
+                    draw.rounded_rectangle((x, y, x + 80, y + 70), radius=9, fill=(247, 247, 243, 255))
+            white_box(650, 914, 970, 1018, "WRITE IT DOWN", "you do not have to remember")
         draw.text((650, 1062), "minimal Schedule  ·  Notion", font=font(16, bold=True), fill=(224, 224, 220, 255))
     else:
         preview = Image.open(sample).convert("RGB").resize((330, 586), Image.Resampling.LANCZOS)
