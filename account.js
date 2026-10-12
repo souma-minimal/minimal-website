@@ -83,12 +83,44 @@
     if (!response.ok) throw new Error('Could not refresh session');
     return storeSession(await response.json());
   };
-  const loadLibrary = async (accessToken) => {
-    const response = await fetch('/api/library', {
-      headers: { authorization: `Bearer ${accessToken}`, 'cache-control': 'no-store' }
+  const requestWithTimeout = async (url, options = {}, timeout = 4500) => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), timeout);
+    try { return await fetch(url, { ...options, signal: controller.signal }); }
+    finally { window.clearTimeout(timer); }
+  };
+  const userIdFromToken = (token) => {
+    try {
+      const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(payload)).sub || '';
+    } catch { return ''; }
+  };
+  const loadLibraryFromSupabase = async (accessToken) => {
+    const userId = userIdFromToken(accessToken);
+    if (!userId) throw new Error('Could not identify account.');
+    const query = new URLSearchParams({
+      select: 'product_key,granted_at,stripe_checkout_session_id',
+      user_id: `eq.${userId}`,
+      order: 'granted_at.desc'
     });
+    const response = await requestWithTimeout(`${config.url}/rest/v1/purchase_entitlements?${query}`, {
+      headers: { apikey: config.publishableKey, authorization: `Bearer ${accessToken}` }
+    }, 3500);
     if (!response.ok) throw new Error('Could not load library.');
     return response.json();
+  };
+  const loadLibrary = async (accessToken) => {
+    try {
+      const response = await requestWithTimeout('/api/library', {
+        headers: { authorization: `Bearer ${accessToken}`, 'cache-control': 'no-store' }
+      });
+      if (!response.ok) throw new Error('Could not load library.');
+      return response.json();
+    } catch {
+      // RLS permits a member to read only their own entitlement rows. This
+      // keeps the library responsive if the server-side proxy is unavailable.
+      return loadLibraryFromSupabase(accessToken);
+    }
   };
   const surveyRequest = async (method, accessToken, data) => {
     const response = await fetch('/api/survey', {
