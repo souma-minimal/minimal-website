@@ -59,17 +59,17 @@ def card(filename, eyebrow, headline, detail, label, japanese=False, sample=SAMP
         draw.rounded_rectangle(panel, radius=20, fill=(18, 18, 18, 255))
         def white_box(x1, y1, x2, y2, heading, sub=""):
             draw.rounded_rectangle((x1, y1, x2, y2), radius=13, fill=(247, 247, 243, 255))
-            draw.text((x1 + 22, y1 + 20), heading, font=font(17, bold=True), fill=(30, 30, 30, 255))
+            draw.text((x1 + 22, y1 + 20), heading, font=font(17, bold=True, japanese=japanese), fill=(30, 30, 30, 255))
             if sub:
-                draw.text((x1 + 22, y1 + 58), sub, font=font(16), fill=(93, 93, 89, 255))
+                draw.text((x1 + 22, y1 + 58), sub, font=font(16, japanese=japanese), fill=(93, 93, 89, 255))
         if filename == "post-01.jpg":
             # Repeated mental reminders become one trusted place.
-            white_box(650, 620, 970, 700, "reply to this", "an idea")
-            white_box(650, 724, 970, 804, "appointment", "something to buy")
+            white_box(650, 620, 970, 700, "返信すること" if japanese else "reply to this", "思いつき" if japanese else "an idea")
+            white_box(650, 724, 970, 804, "予定" if japanese else "appointment", "買うもの" if japanese else "something to buy")
             draw.polygon([(800, 828), (832, 828), (816, 858)], fill=(220, 220, 215, 255))
             draw.rounded_rectangle((650, 880, 970, 1008), radius=13, fill=(220, 220, 215, 255))
-            draw.text((674, 910), "ONE PLACE", font=font(18, bold=True), fill=(18, 18, 18, 255))
-            draw.text((674, 950), "plans · tasks · ideas", font=font(17), fill=(65, 65, 61, 255))
+            draw.text((674, 910), "ひとつの場所" if japanese else "ONE PLACE", font=font(18, bold=True, japanese=japanese), fill=(18, 18, 18, 255))
+            draw.text((674, 950), "予定・タスク・思いつき" if japanese else "plans · tasks · ideas", font=font(17, japanese=japanese), fill=(65, 65, 61, 255))
         elif filename == "post-02.jpg":
             # Three sources converge instead of adding another system.
             white_box(650, 636, 798, 742, "PLANS")
@@ -80,20 +80,20 @@ def card(filename, eyebrow, headline, detail, label, japanese=False, sample=SAMP
             draw.line((810, 876, 810, 932), fill=(220, 220, 215, 255), width=4)
             white_box(684, 948, 936, 1034, "ONE CALM PLACE")
         elif filename == "post-07.jpg":
-            white_box(650, 630, 970, 734, "PLAN CHANGED", "this part can wait")
+            white_box(650, 630, 970, 734, "予定が変わった" if japanese else "PLAN CHANGED", "これはあとでいい" if japanese else "this part can wait")
             draw.line((672, 654, 948, 710), fill=(185, 185, 180, 255), width=3)
-            white_box(650, 780, 970, 918, "TODAY", "one next task")
+            white_box(650, 780, 970, 918, "今日" if japanese else "TODAY", "次にやるひとつ" if japanese else "one next task")
             draw.ellipse((672, 950, 700, 978), fill=(220, 220, 215, 255))
-            draw.text((720, 950), "return here", font=font(18, bold=True), fill=(225, 225, 222, 255))
+            draw.text((720, 950), "ここに戻る" if japanese else "return here", font=font(18, bold=True, japanese=japanese), fill=(225, 225, 222, 255))
         elif filename == "post-08.jpg":
             draw.text((664, 632), "WHEN PLANS MOVE", font=font(17, bold=True), fill=(225, 225, 222, 255))
             white_box(650, 686, 970, 800, "SEE TODAY", "the next task")
             draw.line((810, 824, 810, 886), fill=(225, 225, 222, 255), width=4)
             white_box(650, 910, 970, 1024, "SAVE THE REST", "for later")
         elif filename == "post-11.jpg":
-            draw.text((660, 628), "START HERE", font=font(18, bold=True), fill=(225, 225, 222, 255))
+            draw.text((660, 628), "ここから" if japanese else "START HERE", font=font(18, bold=True, japanese=japanese), fill=(225, 225, 222, 255))
             draw.text((660, 696), "01", font=font(78, bold=True), fill=(225, 225, 222, 255))
-            white_box(650, 820, 970, 952, "ONE TASK", "enough for today")
+            white_box(650, 820, 970, 952, "今日のひとつ" if japanese else "ONE TASK", "それで十分" if japanese else "enough for today")
         elif filename == "post-12.jpg":
             draw.ellipse((660, 654, 716, 710), fill=(247, 247, 243, 255))
             draw.text((678, 667), "1", font=font(19, bold=True), fill=(18, 18, 18, 255))
@@ -104,12 +104,12 @@ def card(filename, eyebrow, headline, detail, label, japanese=False, sample=SAMP
             draw.text((742, 840), "SAVE THE REST", font=font(17, bold=True), fill=(225, 225, 222, 255))
             draw.text((742, 878), "one safe place", font=font(16), fill=(178, 178, 174, 255))
         else:  # post-13: write down next week rather than holding it in mind.
-            draw.text((660, 630), "NEXT WEEK", font=font(18, bold=True), fill=(225, 225, 222, 255))
+            draw.text((660, 630), "来週" if japanese else "NEXT WEEK", font=font(18, bold=True, japanese=japanese), fill=(225, 225, 222, 255))
             for row in range(2):
                 for col in range(3):
                     x, y = 660 + col * 104, 684 + row * 96
                     draw.rounded_rectangle((x, y, x + 80, y + 70), radius=9, fill=(247, 247, 243, 255))
-            white_box(650, 914, 970, 1018, "WRITE IT DOWN", "you do not have to remember")
+            white_box(650, 914, 970, 1018, "書き留める" if japanese else "WRITE IT DOWN", "覚えておかなくていい" if japanese else "you do not have to remember")
         draw.text((650, 1062), "minimal Schedule  ·  Notion", font=font(16, bold=True), fill=(224, 224, 220, 255))
     else:
         preview = Image.open(sample).convert("RGB").resize((330, 586), Image.Resampling.LANCZOS)
