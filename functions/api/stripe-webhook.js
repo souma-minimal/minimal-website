@@ -95,6 +95,37 @@ async function grantEntitlements({ supabaseUrl, serviceRoleKey, userId, sessionI
   return response.json();
 }
 
+function ownedItems(rows) {
+  return rows.filter(row => row?.product_key && row?.stripe_checkout_session_id)
+    .map(row => ({
+      product_key: row.product_key,
+      stripe_checkout_session_id: row.stripe_checkout_session_id,
+      granted_at: row.granted_at || new Date().toISOString()
+    }));
+}
+
+async function saveLibraryMetadata({ supabaseUrl, serviceRoleKey, userId, rows }) {
+  const additions = ownedItems(rows);
+  if (!additions.length) return false;
+  const userResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
+    headers: { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}` }
+  });
+  if (!userResponse.ok) return false;
+  const current = await userResponse.json();
+  const existing = Array.isArray(current.user_metadata?.minimal_library) ? current.user_metadata.minimal_library : [];
+  const merged = [...existing, ...additions].reduce((all, item) => {
+    const key = `${item.product_key}:${item.stripe_checkout_session_id}`;
+    if (!all.some(entry => `${entry.product_key}:${entry.stripe_checkout_session_id}` === key)) all.push(item);
+    return all;
+  }, []);
+  const updateResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
+    method: 'PUT',
+    headers: { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ user_metadata: { ...(current.user_metadata || {}), minimal_library: merged } })
+  });
+  return updateResponse.ok;
+}
+
 function escapeHtml(value) {
   return String(value || '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 }
@@ -168,21 +199,34 @@ export async function onRequestPost(context) {
     const userId = directUserId || await userIdForEmail(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, email);
     if (!userId) return json({ received: true, reason: 'No matching account yet.' });
     const lines = await stripeLineItems(session.id, STRIPE_SECRET_KEY);
-    const created = await grantEntitlements({
+    const entitlementRows = lines
+      .map(line => ({ priceId: line.price?.id, product_key: productMap[line.price?.id] }))
+      .filter(line => line.product_key)
+      .map(line => ({ ...line, stripe_checkout_session_id: session.id, granted_at: new Date().toISOString() }));
+    let created = [];
+    try {
+      created = await grantEntitlements({
+        supabaseUrl: SUPABASE_URL,
+        serviceRoleKey: SUPABASE_SERVICE_ROLE_KEY,
+        userId,
+        sessionId: session.id,
+        customerId: session.customer || null,
+        lines,
+        productMap
+      });
+    } catch { /* The Auth-backed library below remains available. */ }
+    await saveLibraryMetadata({
       supabaseUrl: SUPABASE_URL,
       serviceRoleKey: SUPABASE_SERVICE_ROLE_KEY,
       userId,
-      sessionId: session.id,
-      customerId: session.customer || null,
-      lines,
-      productMap
-    });
+      rows: entitlementRows
+    }).catch(() => false);
     // The library insert is idempotent. A repeat free download should not add
     // duplicate cards, but it should still receive the confirmation email.
-    const entitlementRows = created.length
+    const emailRows = created.length
       ? created
       : lines.map(line => ({ product_key: productMap[line.price?.id] })).filter(row => row.product_key);
-    await sendPurchaseEmail({ env: context.env, session, entitlementRows, lines, productMap }).catch(() => false);
+    await sendPurchaseEmail({ env: context.env, session, entitlementRows: emailRows, lines, productMap }).catch(() => false);
     return json({ received: true, granted: created.length });
   } catch {
     // Return a retryable failure without exposing payment, account, or secret details.

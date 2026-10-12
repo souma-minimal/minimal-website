@@ -36,6 +36,34 @@ async function signedInUser(request, supabaseUrl, serviceRoleKey) {
   return response.ok ? response.json() : null;
 }
 
+async function saveLibraryMetadata({ env, user, checkout, productMap, lineItems }) {
+  const additions = lineItems
+    .map(line => productMap[line.price?.id])
+    .filter(Boolean)
+    .map(product_key => ({
+      product_key,
+      stripe_checkout_session_id: checkout.id,
+      granted_at: new Date((checkout.created || Date.now() / 1000) * 1000).toISOString()
+    }));
+  if (!additions.length) return false;
+  const existing = Array.isArray(user.user_metadata?.minimal_library) ? user.user_metadata.minimal_library : [];
+  const library = [...existing, ...additions].reduce((all, item) => {
+    const key = `${item.product_key}:${item.stripe_checkout_session_id}`;
+    if (!all.some(entry => `${entry.product_key}:${entry.stripe_checkout_session_id}` === key)) all.push(item);
+    return all;
+  }, []);
+  const response = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+    method: 'PUT',
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({ user_metadata: { ...(user.user_metadata || {}), minimal_library: library } })
+  });
+  return response.ok;
+}
+
 async function synchroniseLibrary({ request, env, checkout, lineItems }) {
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY || !env.PRODUCT_ACCOUNT_ENTITLEMENTS) return false;
   const user = await signedInUser(request, env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -54,17 +82,22 @@ async function synchroniseLibrary({ request, env, checkout, lineItems }) {
       product_key: line.productKey
     }));
   if (!rows.length) return false;
-  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/purchase_entitlements?on_conflict=stripe_checkout_session_id,product_key`, {
-    method: 'POST',
-    headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      'content-type': 'application/json',
-      Prefer: 'resolution=ignore-duplicates,return=minimal'
-    },
-    body: JSON.stringify(rows)
-  });
-  return response.ok;
+  let databaseUpdated = false;
+  try {
+    const response = await fetch(`${env.SUPABASE_URL}/rest/v1/purchase_entitlements?on_conflict=stripe_checkout_session_id,product_key`, {
+      method: 'POST',
+      headers: {
+        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+        authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'content-type': 'application/json',
+        Prefer: 'resolution=ignore-duplicates,return=minimal'
+      },
+      body: JSON.stringify(rows)
+    });
+    databaseUpdated = response.ok;
+  } catch { /* Auth metadata is an independent delivery record. */ }
+  const metadataUpdated = await saveLibraryMetadata({ env, user, checkout, productMap, lineItems }).catch(() => false);
+  return databaseUpdated || metadataUpdated;
 }
 
 export async function onRequestGet(context) {

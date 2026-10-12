@@ -55,6 +55,15 @@ async function libraryFromStripe({ stripeKey, email, productMap }) {
   return purchases.sort((left, right) => right.granted_at.localeCompare(left.granted_at));
 }
 
+function libraryFromMetadata(user) {
+  const stored = user?.user_metadata?.minimal_library;
+  if (!Array.isArray(stored)) return [];
+  return stored.filter(item => item
+    && typeof item.product_key === 'string'
+    && typeof item.stripe_checkout_session_id === 'string'
+    && typeof item.granted_at === 'string');
+}
+
 // The browser never receives a service key. This endpoint checks the caller's
 // Supabase session first, then reads only that caller's entitlement rows.
 export async function onRequestGet(context) {
@@ -64,6 +73,8 @@ export async function onRequestGet(context) {
   try {
     const user = await signedInUser(context.request, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     if (!user?.id) return json({ error: 'Sign in is required.' }, 401);
+    const metadataLibrary = libraryFromMetadata(user);
+    if (metadataLibrary.length) return json(metadataLibrary);
     const query = new URLSearchParams({
       select: 'product_key,granted_at,stripe_checkout_session_id',
       user_id: `eq.${user.id}`,
@@ -82,6 +93,8 @@ export async function onRequestGet(context) {
     const productMap = JSON.parse(PRODUCT_ACCOUNT_ENTITLEMENTS);
     return json(await libraryFromStripe({ stripeKey, email: user.email, productMap }));
   } catch {
-    return json({ error: 'Could not load library.' }, 500);
+    // A library can safely be empty; never make successful sign-in look like
+    // a failure just because an optional history service is unavailable.
+    return json([]);
   }
 }
