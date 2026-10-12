@@ -44,20 +44,34 @@ def wrap(draw, value, text_font, max_width):
     return lines
 
 
-def card(filename, eyebrow, headline, detail, label, japanese=False):
-    base = Image.open(SAMPLE).convert("RGB").resize((W, H), Image.Resampling.LANCZOS)
+def card(filename, eyebrow, headline, detail, label, japanese=False, sample=SAMPLE):
+    base = Image.open(sample).convert("RGB").resize((W, H), Image.Resampling.LANCZOS)
     base = base.filter(ImageFilter.GaussianBlur(8)).convert("RGBA")
     veil = Image.new("RGBA", (W, H), (244, 244, 240, 232))
     canvas = Image.alpha_composite(base, veil)
     draw = ImageDraw.Draw(canvas)
     # Preview shows the product in use, while text says why it matters.
-    preview = Image.open(SAMPLE).convert("RGB").resize((330, 586), Image.Resampling.LANCZOS)
-    preview = preview.convert("RGBA")
-    shadow = Image.new("RGBA", (370, 626), (0, 0, 0, 0))
-    ImageDraw.Draw(shadow).rounded_rectangle((18, 18, 352, 608), radius=42, fill=(0, 0, 0, 45))
-    shadow = shadow.filter(ImageFilter.GaussianBlur(16))
-    canvas.alpha_composite(shadow, (672, 595))
-    canvas.alpha_composite(preview, (692, 615))
+    planner_files = {"post-01.jpg", "post-02.jpg", "post-07.jpg", "post-08.jpg", "post-11.jpg", "post-12.jpg", "post-13.jpg"}
+    if filename in planner_files:
+        # Show the planner concept itself instead of an unrelated wallpaper.
+        panel = (612, 570, 1008, 1124)
+        draw.rounded_rectangle(panel, radius=20, fill=(18, 18, 18, 255))
+        labels = [("TODAY", "one next task"), ("THIS WEEK", "plans in view"), ("LATER", "ideas kept safe")]
+        y_card = 620
+        for heading, small in labels:
+            draw.rounded_rectangle((650, y_card, 970, y_card + 122), radius=13, fill=(247, 247, 243, 255))
+            draw.text((676, y_card + 23), heading, font=font(18, bold=True), fill=(30, 30, 30, 255))
+            draw.text((676, y_card + 62), small, font=font(18), fill=(93, 93, 89, 255))
+            y_card += 145
+        draw.text((650, 1062), "minimal Schedule  ·  Notion", font=font(16, bold=True), fill=(224, 224, 220, 255))
+    else:
+        preview = Image.open(sample).convert("RGB").resize((330, 586), Image.Resampling.LANCZOS)
+        preview = preview.convert("RGBA")
+        shadow = Image.new("RGBA", (370, 626), (0, 0, 0, 0))
+        ImageDraw.Draw(shadow).rounded_rectangle((18, 18, 352, 608), radius=42, fill=(0, 0, 0, 45))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(16))
+        canvas.alpha_composite(shadow, (672, 595))
+        canvas.alpha_composite(preview, (692, 615))
     draw = ImageDraw.Draw(canvas)
     draw.rectangle((72, 86, 124, 92), fill=(20, 20, 20, 255))
     eyebrow_font = font(22, bold=True, japanese=japanese)
@@ -91,6 +105,35 @@ def main():
     ]
     for args in cards:
         card(*args)
+
+    # One visual per scheduled post.  Each image tells the same everyday story
+    # as its caption, instead of making an unexplained collection name do work.
+    samples = [
+        "terrain-studies-01-dune-iphone-sample.jpg", "terrain-studies-02-ridge-iphone-sample.jpg",
+        "terrain-studies-03-tide-iphone-sample.jpg", "terrain-studies-04-stone-iphone-sample.jpg",
+        "terrain-studies-05-moon-iphone-sample.jpg", "terrain-studies-06-fog-iphone-sample.jpg",
+        "minimal-wallpaper-01-iphone-sample.jpg", "minimal-wallpaper-02-iphone-sample.jpg",
+        "minimal-wallpaper-03-iphone-sample.jpg", "minimal-wallpaper-04-iphone-sample.jpg",
+        "terrain-studies-01-dune-iphone-sample.jpg", "terrain-studies-02-ridge-iphone-sample.jpg",
+        "terrain-studies-03-tide-iphone-sample.jpg"
+    ]
+    posts = [
+        ("post-01.jpg", "予定が多い日の朝", "頭の中で同じことを\n何度も確認してしまう。", "予定・やること・思いつきを、Notionの一か所へ。", "次にすることを見つける", True),
+        ("post-02.jpg", "WHEN THE DAY FEELS FULL", "You do not need\nmore reminders.", "Keep plans, tasks and ideas in one calm place.", "Find the next thing", False),
+        ("post-03.jpg", "スマホを開くたび", "通知より先に、\n画面がうるさく感じる。", "必要なものを見つけやすくする、iPhone用モノクロ壁紙。", "静かなホーム画面", True),
+        ("post-04.jpg", "BEFORE YOU OPEN AN APP", "Does your phone\nalready feel busy?", "A monochrome iPhone wallpaper with less visual noise.", "A quieter home screen", False),
+        ("post-05.jpg", "毎日何度も見る画面", "時計と必要なアプリが\n見つけやすければいい。", "派手さを足すためではない、iPhone用モノクロ壁紙です。", "1枚ずつ選べます", True),
+        ("post-06.jpg", "THE SCREEN YOU SEE MOST", "Make room for the time\nand your next tap.", "A quiet iPhone wallpaper, sold one at a time.", "Less visual noise", False),
+        ("post-07.jpg", "予定が崩れた日", "全部を立て直さなくていい。", "まず今日やることを見える場所へ。残りは忘れない場所へ。", "今日に戻る", True),
+        ("post-08.jpg", "WHEN PLANS CHANGE", "You do not need to\nrebuild your week.", "See today’s task. Keep the rest safe for later.", "Return to today", False),
+        ("post-09.jpg", "壁紙を探している人へ", "スマホを開いたとき、\n必要なものが見つかる。", "そのための、控えめなモノクロ壁紙です。", "購入前にサンプルを見る", True),
+        ("post-10.jpg", "LOOKING FOR A WALLPAPER?", "Not more decoration.\nMore room to notice.", "A monochrome background for the things you use every day.", "See the sample first", False),
+        ("post-11.jpg", "何から始めればいい？", "今日の一つが見えれば、\nそれでいい。", "予定・タスク・思いつきを、ひとつのNotionページへ。", "忙しい朝のために", True),
+        ("post-12.jpg", "WHERE DO I BEGIN?", "Find one clear thing\nfor today.", "A Notion planner for keeping the rest safely in one place.", "Start with one thing", False),
+        ("post-13.jpg", "来週が少し気になる夜", "全部を覚えておかなくていい。", "予定とやることを一か所に置いて、次の一歩を見失わない。", "静かに週を始める", True),
+    ]
+    for values, sample_name in zip(posts, samples):
+        card(*values, sample=ROOT / "assets" / "social-samples" / sample_name)
 
 
 if __name__ == "__main__":
