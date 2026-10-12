@@ -25,12 +25,9 @@ async function userFor(context) {
 export async function onRequestGet(context) {
   const session = await userFor(context);
   if (session.error) return session.error;
-  const query = new URLSearchParams({ select: 'uses,interest,notes,updated_at', user_id: `eq.${session.user.id}`, limit: '1' });
-  const response = await fetch(`${session.url}/rest/v1/account_survey_responses?${query}`, {
-    headers: { apikey: session.key, authorization: `Bearer ${session.key}` }
-  });
-  if (!response.ok) return json({ error: 'Could not load survey.' }, 500);
-  return json((await response.json())[0] || null);
+  // Keep this small, optional profile data with the authenticated user rather
+  // than exposing another database table through the public Data API.
+  return json(session.user.user_metadata?.minimal_survey || null);
 }
 
 export async function onRequestPost(context) {
@@ -41,16 +38,16 @@ export async function onRequestPost(context) {
   const uses = typeof body.uses === 'string' ? body.uses.slice(0, 64) : '';
   const interest = typeof body.interest === 'string' ? body.interest.slice(0, 64) : '';
   const notes = typeof body.notes === 'string' ? body.notes.slice(0, 600) : '';
-  const response = await fetch(`${session.url}/rest/v1/account_survey_responses?on_conflict=user_id`, {
-    method: 'POST',
+  const survey = { uses, interest, notes, updated_at: new Date().toISOString() };
+  const response = await fetch(`${session.url}/auth/v1/admin/users/${session.user.id}`, {
+    method: 'PUT',
     headers: {
       apikey: session.key,
       authorization: `Bearer ${session.key}`,
-      'content-type': 'application/json',
-      Prefer: 'resolution=merge-duplicates,return=representation'
+      'content-type': 'application/json'
     },
-    body: JSON.stringify({ user_id: session.user.id, uses, interest, notes, updated_at: new Date().toISOString() })
+    body: JSON.stringify({ user_metadata: { ...(session.user.user_metadata || {}), minimal_survey: survey } })
   });
   if (!response.ok) return json({ error: 'Could not save survey.' }, 500);
-  return json((await response.json())[0] || { uses, interest, notes });
+  return json(survey);
 }
