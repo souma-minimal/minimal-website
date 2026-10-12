@@ -17,6 +17,9 @@
   const signedIn = document.querySelector('[data-account-signed-in]');
   const signedInEmail = document.querySelector('[data-account-signed-in-email]');
   const confirmWrap = document.querySelector('[data-account-confirm-wrap]');
+  const survey = document.querySelector('[data-account-survey]');
+  const surveyForm = document.querySelector('[data-account-survey-form]');
+  const surveyFeedback = document.querySelector('[data-account-survey-feedback]');
   const recoveryButton = document.querySelector('[data-account-recovery]');
   const modeButtons = [...document.querySelectorAll('[data-account-mode]')];
   const submitJa = document.querySelector('[data-account-submit-ja]');
@@ -87,6 +90,26 @@
     if (!response.ok) throw new Error('Could not load library.');
     return response.json();
   };
+  const surveyRequest = async (method, accessToken, data) => {
+    const response = await fetch('/api/survey', {
+      method,
+      headers: { authorization: `Bearer ${accessToken}`, 'content-type': 'application/json', 'cache-control': 'no-store' },
+      body: data ? JSON.stringify(data) : undefined
+    });
+    if (!response.ok) throw new Error('Could not load survey.');
+    return response.json();
+  };
+  const loadSurvey = async (accessToken) => {
+    if (!survey || !surveyForm) return;
+    try {
+      const response = await surveyRequest('GET', accessToken);
+      survey.hidden = false;
+      if (!response) return;
+      surveyForm.elements.uses.value = response.uses || '';
+      surveyForm.elements.interest.value = response.interest || '';
+      surveyForm.elements.notes.value = response.notes || '';
+    } catch { /* An optional survey must never block the library. */ }
+  };
   const productName = (key) => ({ 'free-still-water': 'Still Water', 'minimal-schedule': 'minimal Schedule', 'terrain-dune': 'Terrain Studies — Dune', 'terrain-ridge': 'Terrain Studies — Ridge', 'terrain-tide': 'Terrain Studies — Tide', 'terrain-stone': 'Terrain Studies — Stone', 'terrain-moon': 'Terrain Studies — Moon', 'terrain-fog': 'Terrain Studies — Fog' }[key] || key);
   const showAccessForm = () => { form.hidden = false; resetForm.hidden = true; signedIn.hidden = true; };
   const showSignedInState = (email) => {
@@ -137,6 +160,7 @@
       .catch(() => {
         libraryItems.innerHTML = '<p class="account-empty"><span class="lang-ja">ライブラリを読み込めませんでした。ページを再読み込みしてください。</span><span class="lang-en">We could not load your library. Please refresh the page.</span></p>';
       });
+    void loadSurvey(accessToken).catch(async () => loadSurvey(await refreshSession()));
     feedback.hidden = true;
   };
   const showError = (error) => { const detail = error?.message || ''; message(`完了できませんでした。入力内容を確認してもう一度お試しください。${detail ? ` (${detail})` : ''}`, `We could not complete that. Check your details and try again.${detail ? ` (${detail})` : ''}`); };
@@ -225,12 +249,32 @@
     const accessToken = localStorage.getItem(tokenKey);
     if (accessToken) await request('/auth/v1/logout', { method: 'POST' }, accessToken).catch(() => null);
     localStorage.removeItem(tokenKey); localStorage.removeItem(refreshKey); localStorage.removeItem(flowKey); localStorage.removeItem(emailKey);
-    library.hidden = true; showAccessForm(); message('ログアウトしました。', 'You are signed out.', 'info');
+    library.hidden = true;
+    if (survey) survey.hidden = true;
+    showAccessForm(); message('ログアウトしました。', 'You are signed out.', 'info');
   });
   window.addEventListener('minimal-account-signout', () => {
     library.hidden = true;
+    if (survey) survey.hidden = true;
     showAccessForm();
     message('ログアウトしました。', 'You are signed out.', 'info');
+  });
+
+  surveyForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const token = localStorage.getItem(tokenKey);
+    if (!token || !surveyFeedback) return;
+    const button = surveyForm.querySelector('button');
+    button.disabled = true;
+    surveyFeedback.textContent = language() === 'en' ? 'Saving…' : '保存しています…';
+    surveyFeedback.classList.remove('is-error');
+    try {
+      await surveyRequest('POST', token, Object.fromEntries(new FormData(surveyForm)));
+      surveyFeedback.textContent = language() === 'en' ? 'Saved. Thank you.' : '保存しました。ありがとうございます。';
+    } catch {
+      surveyFeedback.textContent = language() === 'en' ? 'Could not save. Please try again.' : '保存できませんでした。もう一度お試しください。';
+      surveyFeedback.classList.add('is-error');
+    } finally { button.disabled = false; }
   });
 
   (async () => {

@@ -72,13 +72,26 @@
           </div>
         </div>
       </div>
-      <div class="accounts-note" data-account-status aria-live="polite"><span class="dot"></span><span class="lang-ja">ログインすると、これから購入した商品をここで受け取れるようになります。過去の購入履歴の連携は準備中です。</span><span class="lang-en">Sign in to make this your home for future purchases. Linking past purchases is being prepared.</span></div>
+      <div class="accounts-note" data-account-status aria-live="polite"><span class="dot"></span><span class="lang-ja">ログインして購入すると、受け取った商品はすぐにこのライブラリに並びます。</span><span class="lang-en">When you buy while signed in, your product appears in this library right away.</span></div>
     </section>
 
     <section class="section account-library" id="account-library" data-account-library hidden>
       <div class="account-library-head"><div><p class="label"><span class="lang-ja">あなたのライブラリ</span><span class="lang-en">YOUR LIBRARY</span></p><h2><span class="lang-ja">手に入れたもの。</span><span class="lang-en">What you own.</span></h2></div><button class="account-signout" type="button" data-account-signout><span class="lang-ja">ログアウト</span><span class="lang-en">Sign out</span></button></div>
       <p class="account-user" data-account-user></p>
       <div class="account-library-items" data-account-library-items></div>
+      <aside class="account-next" aria-label="Next things to explore">
+        <div><p class="label"><span class="lang-ja">次に整える</span><span class="lang-en">WHAT'S NEXT</span></p><h3><span class="lang-ja">画面と一週間を、<br>ひとつの流れに。</span><span class="lang-en">A calmer screen.<br>A clearer week.</span></h3><p><span class="lang-ja">壁紙で画面を静かにして、minimal Scheduleで今週の予定を見やすく。</span><span class="lang-en">Start with a quieter screen, then make your week easier to see with minimal Schedule.</span></p></div>
+        <div class="account-next-actions"><a class="account-library-action" href="index.html#products"><span class="lang-ja">商品を見る ↗</span><span class="lang-en">EXPLORE PRODUCTS ↗</span></a><a class="account-library-action" href="wallpaper.html"><span class="lang-ja">壁紙を見る ↗</span><span class="lang-en">EXPLORE WALLPAPERS ↗</span></a></div>
+      </aside>
+      <section class="account-survey" data-account-survey hidden aria-labelledby="survey-title">
+        <div><p class="label"><span class="lang-ja">任意アンケート</span><span class="lang-en">OPTIONAL CHECK-IN</span></p><h3 id="survey-title"><span class="lang-ja">次につくるものを、<br>少しだけ教えてください。</span><span class="lang-en">Help shape what<br>we make next.</span></h3><p><span class="lang-ja">回答はいつでも変更できます。公開されることはありません。</span><span class="lang-en">You can change this anytime. Your answers are never public.</span></p></div>
+        <form data-account-survey-form>
+          <label><span class="lang-ja">どこを整えたい？</span><span class="lang-en">WHAT WOULD YOU LIKE TO IMPROVE?</span><select name="uses"><option value="">選択しない / No answer</option><option value="planning">予定とタスク / Planning</option><option value="screen">スマホ画面 / Phone screen</option><option value="money">お金の管理 / Money</option><option value="habits">習慣 / Habits</option></select></label>
+          <label><span class="lang-ja">気になるものは？</span><span class="lang-en">WHAT INTERESTS YOU?</span><select name="interest"><option value="">選択しない / No answer</option><option value="schedule">minimal Schedule</option><option value="todo">minimal Todo</option><option value="finance">minimal Finance</option><option value="wallpapers">Wallpapers</option></select></label>
+          <label><span class="lang-ja">ひとこと（任意）</span><span class="lang-en">A NOTE (OPTIONAL)</span><textarea name="notes" maxlength="600" placeholder="使いにくいところ、欲しいものなど"></textarea></label>
+          <button class="account-library-action" type="submit"><span class="lang-ja">回答を保存</span><span class="lang-en">SAVE ANSWERS</span></button><p data-account-survey-feedback aria-live="polite"></p>
+        </form>
+      </section>
     </section>
 
     <section class="section accounts-purpose">

@@ -114,14 +114,14 @@ function filesForPrice(rules, priceId) {
   return (rules?.[priceId] || []).map(file => typeof file === 'string' ? { key: file } : file).filter(file => file.key);
 }
 
-async function sendPurchaseEmail({ env, session, created, lines, productMap }) {
+async function sendPurchaseEmail({ env, session, entitlementRows, lines, productMap }) {
   if (!env.RESEND_API_KEY || !env.EMAIL_FROM) return false;
   const recipient = session.customer_details?.email || session.customer_email;
-  if (!recipient || !created.length) return false;
+  if (!recipient || !entitlementRows.length) return false;
   const origin = env.PUBLIC_SITE_URL || 'https://minimal-website-djl.pages.dev';
   let fileRules = {};
   try { fileRules = JSON.parse(env.PRODUCT_ENTITLEMENTS || '{}'); } catch { /* Links remain available through the library. */ }
-  const keys = [...new Set(created.map(row => row.product_key))];
+  const keys = [...new Set(entitlementRows.map(row => row.product_key))];
   const downloads = lines.flatMap(line => filesForPrice(fileRules, line.price?.id));
   const directDownloads = downloads.map(file => `${origin}/api/download?session_id=${encodeURIComponent(session.id)}&key=${encodeURIComponent(file.key)}`);
   const items = keys.map(productLabel).map(escapeHtml).join('<br>');
@@ -177,7 +177,12 @@ export async function onRequestPost(context) {
       lines,
       productMap
     });
-    await sendPurchaseEmail({ env: context.env, session, created, lines, productMap }).catch(() => false);
+    // The library insert is idempotent. A repeat free download should not add
+    // duplicate cards, but it should still receive the confirmation email.
+    const entitlementRows = created.length
+      ? created
+      : lines.map(line => ({ product_key: productMap[line.price?.id] })).filter(row => row.product_key);
+    await sendPurchaseEmail({ env: context.env, session, entitlementRows, lines, productMap }).catch(() => false);
     return json({ received: true, granted: created.length });
   } catch {
     // Return a retryable failure without exposing payment, account, or secret details.
