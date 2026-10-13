@@ -101,7 +101,7 @@ REELS = [
         "sub": "画面を静かにする、3つだけの選び方。",
         "steps": ["時間が見える余白を残す", "毎日使うアプリだけ置く", "今日やる一つを決める"],
         "end": "静かなiPhone setup", "cta": "保存して、あとで整える",
-        "caption": "スマホを開くたび、もう情報が多いと感じる日へ。私が残したのは、時間・よく使うアプリ・今日やる一つだけ。壁紙は画面を飾るためではなく、必要なものを見つける余白のために。\n\n壁紙はプロフィールから。購入前にサンプルを見られます。\n\n#iphoneホーム画面 #デジタルミニマリズム #壁紙",
+        "caption": "スマホを整えるとき、最初に消したもの。\n\nホーム画面から「今すぐ必要ないもの」を外すと、時計と次に開くアプリが見つけやすくなりました。\n\n残したのは、時間が見える余白・毎日使うアプリ・今日やる一つ。\n\nあなたのホーム画面から、最初に一つ消すなら何ですか？\n\n透かし入り壁紙サンプルはプロフィールにあります。\n\n#iphoneホーム画面 #デジタルミニマリズム #壁紙",
     },
     {
         "slug": "en-quiet-iphone", "lang": "en", "sample": "terrain-studies-02-ridge-iphone-sample.jpg",
@@ -109,7 +109,7 @@ REELS = [
         "sub": "Three choices for a quieter screen.",
         "steps": ["Leave room for the time", "Keep only daily apps", "Choose one next task"],
         "end": "A quieter iPhone setup", "cta": "Save this for later", 
-        "caption": "For days when your phone already feels loud before you open an app. I keep room for the time, the apps I actually use, and one next task. A wallpaper is not decoration here—it is room to notice what matters.\n\nPreview the wallpapers from the profile.\n\n#iphonehomescreen #digitalminimalism #iossetup",
+        "caption": "The first thing I removed from my iPhone home screen.\n\nWhen I removed what I do not need right now, it became easier to find the time and the next app I actually mean to open.\n\nWhat stays: room for the time, the apps I use every day, and one next task.\n\nWhat is the first thing you would remove from your home screen?\n\nThe watermarked wallpaper preview is in the profile.\n\n#iphonehomescreen #digitalminimalism #iossetup",
     },
     {
         "slug": "jp-sunday-reset", "lang": "jp", "sample": "terrain-studies-03-tide-iphone-sample.jpg",
@@ -117,7 +117,7 @@ REELS = [
         "sub": "予定を増やす前に、置き場所をひとつにする。",
         "steps": ["来週の予定を書く", "気になることを残す", "月曜の一つを決める"],
         "end": "週を始める前の、静かな準備", "cta": "月曜の朝に見返す", 
-        "caption": "月曜を完璧に始める必要はない。でも、気になることを頭の外に置いておくと少し違う。日曜の15分で、予定・やること・思いつきをNotionの一か所へ。\n\nminimal Schedule はプロフィールから。\n\n#notion #週間計画 #月曜の準備",
+        "caption": "月曜を少し軽くする、日曜15分。\n\n日曜に完璧な計画は作りません。来週の予定、気になっていること、月曜に始める一つだけを、忘れない場所に置いておきます。\n\n次の日曜に見返せるよう、保存しておいてください。\n\n使っているminimal Scheduleはプロフィールから見られます。\n\n#notion #週間計画 #月曜の準備",
     },
     {
         "slug": "en-sunday-reset", "lang": "en", "sample": "terrain-studies-04-stone-iphone-sample.jpg",
@@ -125,7 +125,7 @@ REELS = [
         "sub": "Put the week somewhere safe before it starts.",
         "steps": ["Write next week’s plans", "Capture what is on your mind", "Pick Monday’s first task"],
         "end": "A quieter start to the week", "cta": "Save for Sunday", 
-        "caption": "Monday does not need a perfect plan. It helps, though, when plans, tasks and loose thoughts have one place to land. This is my 15-minute Sunday reset in Notion.\n\nminimal Schedule is linked in the profile.\n\n#notiontemplate #weeklyreset #productivity",
+        "caption": "My 15-minute Sunday reset for a lighter Monday.\n\nI do not make a perfect plan. I put next week’s plans, loose thoughts, and Monday’s first task somewhere I will not lose them.\n\nSave this for Sunday.\n\nminimal Schedule is linked in the profile.\n\n#notiontemplate #weeklyreset #productivity",
     },
     {
         "slug": "jp-screen-reset", "lang": "jp", "sample": "terrain-studies-05-moon-iphone-sample.jpg",
@@ -133,7 +133,7 @@ REELS = [
         "sub": "最初に変えるのは、目に入る順番。",
         "steps": ["壁紙の情報量を減らす", "今日のタスクを一つ見る", "終わったら画面を閉じる"],
         "end": "今あるデスクを、少し静かに。", "cta": "あなたなら何を消す？", 
-        "caption": "デスクセットアップは、必ずしも新しい機材の話ではないと思う。今ある画面で、最初に何が見えるかを整えるだけでも作業の始まりが変わる。\n\nあなたなら、ホーム画面から何を一つ消しますか？\n\n#デスクセットアップ #macbook #デジタルミニマリズム",
+        "caption": "新しいデスクを買う前に、画面で整えた3つのこと。\n\n高い機材ではなく、今ある画面で最初に目に入るものを変えました。\n\n壁紙の情報量を減らす。今日のタスクを一つだけ見る。終わったら画面を閉じる。\n\nあなたなら、ホーム画面から何を一つ消しますか？\n\n#デスクセットアップ #macbook #デジタルミニマリズム",
     },
     {
         "slug": "en-screen-reset", "lang": "en", "sample": "terrain-studies-06-fog-iphone-sample.jpg",
@@ -141,7 +141,7 @@ REELS = [
         "sub": "Start with the order of what you see.",
         "steps": ["Reduce visual noise", "See one task for today", "Close the screen when done"],
         "end": "A quieter screen setup", "cta": "What would you remove first?", 
-        "caption": "A desk setup is not only about buying gear. Start with the screen you already open: reduce the noise, see one task, and close it when you are done.\n\nWhat is one thing you would remove from your home screen?\n\n#desksetup #macbooksetup #digitalminimalism",
+        "caption": "Three things I changed on my screen before buying any desk gear.\n\nI started with the first things I see on the screen I already own: less visual noise in the wallpaper, one task for today, and closing the screen when I am done.\n\nWhat is one thing you would remove from your home screen?\n\n#desksetup #macbooksetup #digitalminimalism",
     },
 ]
 
