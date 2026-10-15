@@ -50,6 +50,17 @@ async function stripeLineItems(sessionId, restrictedKey) {
   return (await response.json()).data || [];
 }
 
+function metadataLineItem(session, productMap) {
+  // Checkout Session metadata is part of Stripe's signed event payload and is
+  // written only by create-checkout.js. It is therefore safe to use as a
+  // fallback when a restricted API key cannot read line items. This keeps a
+  // temporary Stripe API-permission error from dropping the whole webhook.
+  const productKey = session.metadata?.product_key;
+  if (typeof productKey !== 'string' || !productKey) return [];
+  const priceId = Object.entries(productMap).find(([, key]) => key === productKey)?.[0];
+  return priceId ? [{ price: { id: priceId } }] : [];
+}
+
 async function userIdForEmail(supabaseUrl, serviceRoleKey, email) {
   // Auth's Admin endpoint is server-only. The small first release can safely
   // paginate the account list; future scale can replace this with a private
@@ -198,7 +209,13 @@ export async function onRequestPost(context) {
     const directUserId = session.client_reference_id || session.metadata?.minimal_account_id;
     const userId = directUserId || await userIdForEmail(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, email);
     if (!userId) return json({ received: true, reason: 'No matching account yet.' });
-    const lines = await stripeLineItems(session.id, STRIPE_SECRET_KEY);
+    let lines;
+    try {
+      lines = await stripeLineItems(session.id, STRIPE_SECRET_KEY);
+    } catch {
+      lines = metadataLineItem(session, productMap);
+    }
+    if (!lines.length) return json({ received: true, reason: 'No recognised purchase item.' });
     const entitlementRows = lines
       .map(line => ({ priceId: line.price?.id, product_key: productMap[line.price?.id] }))
       .filter(line => line.product_key)
