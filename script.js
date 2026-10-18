@@ -95,7 +95,12 @@
     translate('[data-i18n="schedule-buy-cta"]', `Scheduleを購入する — ${schedule.price} <span aria-hidden="true">↗</span>`);
     const scheduleCta = document.querySelector('[data-i18n="schedule-buy-cta"]');
     if (scheduleCta) scheduleCta.dataset.i18nEn = `Get Schedule — ${schedule.price} <span aria-hidden="true">↗</span>`;
-    document.querySelectorAll('[data-catalog-price="schedule"]').forEach((node) => { node.textContent = schedule.price; });
+  }
+  if (catalog) {
+    document.querySelectorAll('[data-catalog-price]').forEach((node) => {
+      const product = catalog[node.dataset.catalogPrice];
+      if (product?.price) node.textContent = product.price;
+    });
   }
   if (location.pathname.endsWith('buy.html') || location.pathname.endsWith('/buy')) {
     translate('[data-i18n="nav-schedule"]', 'Scheduleについて');
