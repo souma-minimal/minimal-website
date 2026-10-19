@@ -238,12 +238,11 @@ export async function onRequestPost(context) {
       userId,
       rows: entitlementRows
     }).catch(() => false);
-    // The library insert is idempotent. A repeat free download should not add
-    // duplicate cards, but it should still receive the confirmation email.
-    const emailRows = created.length
-      ? created
-      : lines.map(line => ({ product_key: productMap[line.price?.id] })).filter(row => row.product_key);
-    await sendPurchaseEmail({ env: context.env, session, entitlementRows: emailRows, lines, productMap }).catch(() => false);
+    // Stripe can retry a delivery. Entitlements are idempotent, and the
+    // confirmation email must be too: send it only for a newly granted item.
+    if (created.length) {
+      await sendPurchaseEmail({ env: context.env, session, entitlementRows: created, lines, productMap }).catch(() => false);
+    }
     return json({ received: true, granted: created.length });
   } catch {
     // Return a retryable failure without exposing payment, account, or secret details.
