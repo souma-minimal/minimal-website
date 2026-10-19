@@ -1,9 +1,17 @@
 import { runtimeConfiguration, runtimeUnavailableJson } from '../_lib/runtime-config.js';
 
-function json(data, status = 200) {
+function json(data, status = 200, source = null) {
+  const headers = {
+    'content-type': 'application/json; charset=utf-8',
+    'cache-control': 'no-store'
+  };
+  // The source is operational metadata only: it lets Preview verify that an
+  // empty array came from the database rather than an error path. It never
+  // includes a Supabase response, account identifier, or credential.
+  if (source) headers['x-minimal-library-source'] = source;
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }
+    headers
   });
 }
 
@@ -78,7 +86,7 @@ export async function onRequestGet(context) {
     const user = await signedInUser(context.request, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     if (!user?.id) return json({ error: 'Sign in is required.' }, 401);
     const metadataLibrary = libraryFromMetadata(user);
-    if (metadataLibrary.length) return json(metadataLibrary);
+    if (metadataLibrary.length) return json(metadataLibrary, 200, 'metadata');
     const query = new URLSearchParams({
       select: 'product_key,granted_at,stripe_checkout_session_id',
       user_id: `eq.${user.id}`,
@@ -87,7 +95,7 @@ export async function onRequestGet(context) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/purchase_entitlements?${query}`, {
       headers: { apikey: SUPABASE_SERVICE_ROLE_KEY }
     });
-    if (response.ok) return json(await response.json());
+    if (response.ok) return json(await response.json(), 200, 'database');
 
     // PostgREST can briefly return 404 immediately after a table or policy
     // change. A completed Stripe Checkout remains the source of truth, so use
@@ -95,10 +103,11 @@ export async function onRequestGet(context) {
     const stripeKey = STRIPE_CHECKOUT_KEY || STRIPE_SECRET_KEY;
     if (!stripeKey || !PRODUCT_ACCOUNT_ENTITLEMENTS || !user.email) throw new Error('Could not load library.');
     const productMap = JSON.parse(PRODUCT_ACCOUNT_ENTITLEMENTS);
-    return json(await libraryFromStripe({ stripeKey, email: user.email, productMap }));
+    return json(await libraryFromStripe({ stripeKey, email: user.email, productMap }), 200, 'stripe-fallback');
   } catch {
-    // A library can safely be empty; never make successful sign-in look like
-    // a failure just because an optional history service is unavailable.
-    return json([]);
+    // An empty library is a valid database result. A failed read is not: keep
+    // the error generic, then let the browser's RLS-protected fallback try its
+    // own read without exposing backend or account details.
+    return json({ error: 'Library data is temporarily unavailable.' }, 503);
   }
 }
