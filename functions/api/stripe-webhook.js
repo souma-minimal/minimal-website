@@ -1,3 +1,5 @@
+import { runtimeConfiguration, runtimeUnavailableJson } from '../_lib/runtime-config.js';
+
 const stripeApi = 'https://api.stripe.com/v1';
 const encoder = new TextEncoder();
 const signatureToleranceSeconds = 300;
@@ -156,20 +158,19 @@ function filesForPrice(rules, priceId) {
   return (rules?.[priceId] || []).map(file => typeof file === 'string' ? { key: file } : file).filter(file => file.key);
 }
 
-async function sendPurchaseEmail({ env, session, entitlementRows, lines, productMap }) {
+async function sendPurchaseEmail({ env, origin, session, entitlementRows, lines, productMap }) {
   if (!env.RESEND_API_KEY || !env.EMAIL_FROM) return false;
   const recipient = session.customer_details?.email || session.customer_email;
   if (!recipient || !entitlementRows.length) return false;
-  const origin = env.PUBLIC_SITE_URL || 'https://minimal-website-djl.pages.dev';
   let fileRules = {};
   try { fileRules = JSON.parse(env.PRODUCT_ENTITLEMENTS || '{}'); } catch { /* Links remain available through the library. */ }
   const keys = [...new Set(entitlementRows.map(row => row.product_key))];
   const downloads = lines.flatMap(line => filesForPrice(fileRules, line.price?.id));
-  const directDownloads = downloads.map(file => `${origin}/api/download?session_id=${encodeURIComponent(session.id)}&key=${encodeURIComponent(file.key)}`);
+  const deliveryUrl = `${origin}/wallpaper-download.html?session_id=${encodeURIComponent(session.id)}`;
   const items = keys.map(productLabel).map(escapeHtml).join('<br>');
   const socialUrl = env.MINIMAL_SOCIAL_URL || `${origin}/#products`;
-  const downloadBlock = directDownloads.length
-    ? `<p style="margin:28px 0 12px">すぐに保存する場合は、下のリンクを開いてください。</p>${directDownloads.map((url, index) => `<p><a href="${url}" style="color:#fff;background:#111;padding:14px 18px;display:inline-block;text-decoration:none">${escapeHtml(keys[index] || 'Download')} をダウンロード</a></p>`).join('')}`
+  const downloadBlock = downloads.length
+    ? `<p style="margin:28px 0 12px">下のリンクから、購入時のアカウントでログインして原寸ファイルを保存できます。</p><p><a href="${deliveryUrl}" style="color:#fff;background:#111;padding:14px 18px;display:inline-block;text-decoration:none">ダウンロードページを開く</a></p>`
     : '';
   const html = `<div style="max-width:560px;margin:0 auto;padding:36px 24px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;color:#171717;line-height:1.65"><p style="font-size:25px;font-weight:700;letter-spacing:-.05em;margin:0 0 34px">minimal.</p><p style="font-size:11px;letter-spacing:.12em;color:#757570">PURCHASE CONFIRMED / ご購入ありがとうございます</p><h1 style="font-size:32px;line-height:1.08;letter-spacing:-.06em;margin:12px 0 18px">あなたの新しい<br>余白が届きました。</h1><p>minimalを選んでいただき、ありがとうございます。購入内容は minimal Accounts のライブラリにもすぐ追加されます。</p><div style="border-top:1px solid #deded8;border-bottom:1px solid #deded8;padding:18px 0;margin:28px 0"><strong>今回の受け取り内容</strong><br>${items}</div><p><a href="${origin}/accounts.html" style="color:#fff;background:#111;padding:14px 18px;display:inline-block;text-decoration:none">ライブラリを開く</a></p>${downloadBlock}<div style="border-top:1px solid #deded8;margin-top:32px;padding-top:22px"><strong>次におすすめ</strong><p>静かな画面と、見通しのいい一週間を一緒に整えるプロダクトも用意しています。</p><p><a href="${origin}/#products" style="color:#171717">ほかの商品を見る →</a><br><a href="${socialUrl}" style="color:#171717">Instagram / Threads を見る →</a></p></div><p style="font-size:12px;color:#757570;margin-top:38px">minimal. — Less, but better.</p></div>`;
   const response = await fetch('https://api.resend.com/emails', {
@@ -181,6 +182,8 @@ async function sendPurchaseEmail({ env, session, entitlementRows, lines, product
 
 export async function onRequestPost(context) {
   const { STRIPE_WEBHOOK_SECRET, STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, PRODUCT_ACCOUNT_ENTITLEMENTS } = context.env;
+  const runtime = runtimeConfiguration(context.env, context.request, { stripe: true, webhook: true });
+  if (!runtime.ok) return runtimeUnavailableJson();
   if (!STRIPE_WEBHOOK_SECRET || !STRIPE_SECRET_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !PRODUCT_ACCOUNT_ENTITLEMENTS) {
     return json({ error: 'Webhook delivery is not configured.' }, 503);
   }
@@ -241,7 +244,7 @@ export async function onRequestPost(context) {
     // Stripe can retry a delivery. Entitlements are idempotent, and the
     // confirmation email must be too: send it only for a newly granted item.
     if (created.length) {
-      await sendPurchaseEmail({ env: context.env, session, entitlementRows: created, lines, productMap }).catch(() => false);
+      await sendPurchaseEmail({ env: context.env, origin: runtime.siteOrigin, session, entitlementRows: created, lines, productMap }).catch(() => false);
     }
     return json({ received: true, granted: created.length });
   } catch {

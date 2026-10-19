@@ -1,3 +1,5 @@
+import { runtimeConfiguration, runtimeUnavailableJson } from '../_lib/runtime-config.js';
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -68,6 +70,8 @@ function libraryFromMetadata(user) {
 // Supabase session first, then reads only that caller's entitlement rows.
 export async function onRequestGet(context) {
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY, STRIPE_CHECKOUT_KEY, PRODUCT_ACCOUNT_ENTITLEMENTS } = context.env;
+  const runtime = runtimeConfiguration(context.env, context.request, { stripe: Boolean(STRIPE_SECRET_KEY || STRIPE_CHECKOUT_KEY) });
+  if (!runtime.ok) return runtimeUnavailableJson();
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return json({ error: 'Library service is not configured.' }, 503);
 
   try {

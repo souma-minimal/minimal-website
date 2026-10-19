@@ -1,3 +1,5 @@
+import { runtimeConfiguration, runtimeUnavailableJson } from '../_lib/runtime-config.js';
+
 const stripeApi = 'https://api.stripe.com/v1';
 
 function json(data, status = 200) {
@@ -26,6 +28,8 @@ function findPrice(productMap, productKey) {
 
 export async function onRequestPost(context) {
   const { request, env } = context;
+  const runtime = runtimeConfiguration(env, request, { stripe: true });
+  if (!runtime.ok) return runtimeUnavailableJson();
   const origin = new URL(request.url).origin;
   const checkoutKey = env.STRIPE_CHECKOUT_KEY || env.STRIPE_SECRET_KEY;
   if (!checkoutKey || !env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY || !env.PRODUCT_ACCOUNT_ENTITLEMENTS) {
