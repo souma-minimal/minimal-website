@@ -62,8 +62,31 @@
       list.replaceChildren(...files.map(file => {
         const link = document.createElement('a');
         link.className = 'buy-button';
-        link.href = `/api/download?session_id=${encodeURIComponent(sessionId)}&key=${encodeURIComponent(file.key)}`;
+        link.href = '#downloads';
         link.textContent = japanese ? `${file.label} をダウンロード ↓` : `Download ${file.label} ↓`;
+        link.addEventListener('click', async event => {
+          event.preventDefault();
+          link.setAttribute('aria-busy', 'true');
+          link.style.pointerEvents = 'none';
+          try {
+            const downloadToken = await currentAccessToken();
+            const response = await fetch(`/api/download?session_id=${encodeURIComponent(sessionId)}&key=${encodeURIComponent(file.key)}`, {
+              headers: downloadToken ? { authorization: `Bearer ${downloadToken}` } : {}
+            });
+            if (!response.ok) throw new Error(copy('ダウンロードを確認できませんでした。', 'We could not verify this download.'));
+            const objectUrl = URL.createObjectURL(await response.blob());
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = file.key.split('/').pop() || 'minimal-download';
+            link.click();
+            URL.revokeObjectURL(objectUrl);
+          } catch (error) {
+            fail(error.message);
+          } finally {
+            link.removeAttribute('aria-busy');
+            link.style.pointerEvents = '';
+          }
+        });
         return link;
       }));
     })

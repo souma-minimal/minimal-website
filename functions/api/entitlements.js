@@ -36,6 +36,19 @@ async function signedInUser(request, supabaseUrl, serviceRoleKey) {
   return response.ok ? response.json() : null;
 }
 
+async function checkoutOwnerId(checkout, supabaseUrl, serviceRoleKey) {
+  const directOwner = checkout.client_reference_id || checkout.metadata?.minimal_account_id;
+  if (directOwner) return directOwner;
+  // Older sessions can be recovered only from an existing server-managed
+  // entitlement. Customer email and user metadata are not authorization data.
+  const response = await fetch(`${supabaseUrl}/rest/v1/purchase_entitlements?stripe_checkout_session_id=eq.${encodeURIComponent(checkout.id)}&select=user_id&limit=2`, {
+    headers: { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}` }
+  });
+  if (!response.ok) return null;
+  const owners = [...new Set((await response.json()).map(row => row.user_id).filter(Boolean))];
+  return owners.length === 1 ? owners[0] : null;
+}
+
 async function saveLibraryMetadata({ env, user, checkout, productMap, lineItems }) {
   const additions = lineItems
     .map(line => productMap[line.price?.id])
@@ -64,11 +77,8 @@ async function saveLibraryMetadata({ env, user, checkout, productMap, lineItems 
   return response.ok;
 }
 
-async function synchroniseLibrary({ request, env, checkout, lineItems }) {
+async function synchroniseLibrary({ env, user, checkout, lineItems }) {
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY || !env.PRODUCT_ACCOUNT_ENTITLEMENTS) return false;
-  const user = await signedInUser(request, env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-  const owner = checkout.client_reference_id || checkout.metadata?.minimal_account_id;
-  if (!user?.id || !owner || user.id !== owner) return false;
   let productMap;
   try { productMap = JSON.parse(env.PRODUCT_ACCOUNT_ENTITLEMENTS); } catch { return false; }
   const rows = lineItems
@@ -103,16 +113,19 @@ async function synchroniseLibrary({ request, env, checkout, lineItems }) {
 export async function onRequestGet(context) {
   const sessionId = new URL(context.request.url).searchParams.get('session_id');
   if (!sessionId) return json({ error: 'Missing checkout session.' }, 400);
-  if (!context.env.STRIPE_SECRET_KEY || !context.env.PRODUCT_ENTITLEMENTS) {
+  if (!context.env.STRIPE_SECRET_KEY || !context.env.SUPABASE_URL || !context.env.SUPABASE_SERVICE_ROLE_KEY || !context.env.PRODUCT_ENTITLEMENTS) {
     return json({ error: 'Secure delivery is still being configured.' }, 503);
   }
 
   try {
     const rules = JSON.parse(context.env.PRODUCT_ENTITLEMENTS);
     const { checkout, lineItems } = await paidCheckout(sessionId, context.env.STRIPE_SECRET_KEY);
+    const user = await signedInUser(context.request, context.env.SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY);
+    const owner = await checkoutOwnerId(checkout, context.env.SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (!user?.id || !owner || user.id !== owner) return json({ error: 'Sign in with the account used for this purchase.' }, 403);
     // A Notion template has no private R2 file, but it must still appear in
     // minimal Accounts immediately after checkout.
-    const libraryUpdated = await synchroniseLibrary({ request: context.request, env: context.env, checkout, lineItems });
+    const libraryUpdated = await synchroniseLibrary({ env: context.env, user, checkout, lineItems });
     const allowed = new Map();
     for (const line of lineItems) {
       const files = filesForPrice(rules, line.price?.id);

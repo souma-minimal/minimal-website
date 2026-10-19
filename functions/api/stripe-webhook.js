@@ -165,11 +165,11 @@ async function sendPurchaseEmail({ env, session, entitlementRows, lines, product
   try { fileRules = JSON.parse(env.PRODUCT_ENTITLEMENTS || '{}'); } catch { /* Links remain available through the library. */ }
   const keys = [...new Set(entitlementRows.map(row => row.product_key))];
   const downloads = lines.flatMap(line => filesForPrice(fileRules, line.price?.id));
-  const directDownloads = downloads.map(file => `${origin}/api/download?session_id=${encodeURIComponent(session.id)}&key=${encodeURIComponent(file.key)}`);
+  const deliveryUrl = `${origin}/wallpaper-download.html?session_id=${encodeURIComponent(session.id)}`;
   const items = keys.map(productLabel).map(escapeHtml).join('<br>');
   const socialUrl = env.MINIMAL_SOCIAL_URL || `${origin}/#products`;
-  const downloadBlock = directDownloads.length
-    ? `<p style="margin:28px 0 12px">すぐに保存する場合は、下のリンクを開いてください。</p>${directDownloads.map((url, index) => `<p><a href="${url}" style="color:#fff;background:#111;padding:14px 18px;display:inline-block;text-decoration:none">${escapeHtml(keys[index] || 'Download')} をダウンロード</a></p>`).join('')}`
+  const downloadBlock = downloads.length
+    ? `<p style="margin:28px 0 12px">下のリンクから、購入時のアカウントでログインして原寸ファイルを保存できます。</p><p><a href="${deliveryUrl}" style="color:#fff;background:#111;padding:14px 18px;display:inline-block;text-decoration:none">ダウンロードページを開く</a></p>`
     : '';
   const html = `<div style="max-width:560px;margin:0 auto;padding:36px 24px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;color:#171717;line-height:1.65"><p style="font-size:25px;font-weight:700;letter-spacing:-.05em;margin:0 0 34px">minimal.</p><p style="font-size:11px;letter-spacing:.12em;color:#757570">PURCHASE CONFIRMED / ご購入ありがとうございます</p><h1 style="font-size:32px;line-height:1.08;letter-spacing:-.06em;margin:12px 0 18px">あなたの新しい<br>余白が届きました。</h1><p>minimalを選んでいただき、ありがとうございます。購入内容は minimal Accounts のライブラリにもすぐ追加されます。</p><div style="border-top:1px solid #deded8;border-bottom:1px solid #deded8;padding:18px 0;margin:28px 0"><strong>今回の受け取り内容</strong><br>${items}</div><p><a href="${origin}/accounts.html" style="color:#fff;background:#111;padding:14px 18px;display:inline-block;text-decoration:none">ライブラリを開く</a></p>${downloadBlock}<div style="border-top:1px solid #deded8;margin-top:32px;padding-top:22px"><strong>次におすすめ</strong><p>静かな画面と、見通しのいい一週間を一緒に整えるプロダクトも用意しています。</p><p><a href="${origin}/#products" style="color:#171717">ほかの商品を見る →</a><br><a href="${socialUrl}" style="color:#171717">Instagram / Threads を見る →</a></p></div><p style="font-size:12px;color:#757570;margin-top:38px">minimal. — Less, but better.</p></div>`;
   const response = await fetch('https://api.resend.com/emails', {
