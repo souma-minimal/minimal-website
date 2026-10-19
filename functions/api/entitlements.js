@@ -44,7 +44,7 @@ async function checkoutOwnerId(checkout, supabaseUrl, serviceRoleKey) {
   // Older sessions can be recovered only from an existing server-managed
   // entitlement. Customer email and user metadata are not authorization data.
   const response = await fetch(`${supabaseUrl}/rest/v1/purchase_entitlements?stripe_checkout_session_id=eq.${encodeURIComponent(checkout.id)}&select=user_id&limit=2`, {
-    headers: { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}` }
+    headers: { apikey: serviceRoleKey }
   });
   if (!response.ok) return null;
   const owners = [...new Set((await response.json()).map(row => row.user_id).filter(Boolean))];
@@ -71,7 +71,6 @@ async function saveLibraryMetadata({ env, user, checkout, productMap, lineItems 
     method: 'PUT',
     headers: {
       apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
       'content-type': 'application/json'
     },
     body: JSON.stringify({ user_metadata: { ...(user.user_metadata || {}), minimal_library: library } })
@@ -100,7 +99,6 @@ async function synchroniseLibrary({ env, user, checkout, lineItems }) {
       method: 'POST',
       headers: {
         apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
         'content-type': 'application/json',
         Prefer: 'resolution=ignore-duplicates,return=minimal'
       },

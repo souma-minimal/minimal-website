@@ -47,7 +47,6 @@ export async function onRequestPost(context) {
     method: 'PUT',
     headers: {
       apikey: session.key,
-      authorization: `Bearer ${session.key}`,
       'content-type': 'application/json'
     },
     body: JSON.stringify({ user_metadata: { ...(session.user.user_metadata || {}), minimal_survey: survey } })

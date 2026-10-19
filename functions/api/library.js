@@ -85,7 +85,7 @@ export async function onRequestGet(context) {
       order: 'granted_at.desc'
     });
     const response = await fetch(`${SUPABASE_URL}/rest/v1/purchase_entitlements?${query}`, {
-      headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` }
+      headers: { apikey: SUPABASE_SERVICE_ROLE_KEY }
     });
     if (response.ok) return json(await response.json());
 

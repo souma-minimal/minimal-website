@@ -70,7 +70,7 @@ async function userIdForEmail(supabaseUrl, serviceRoleKey, email) {
   const wanted = email.trim().toLowerCase();
   for (let page = 1; page <= 20; page += 1) {
     const response = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=${page}&per_page=1000`, {
-      headers: { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}` }
+      headers: { apikey: serviceRoleKey }
     });
     if (!response.ok) throw new Error('Unable to find the account owner.');
     const body = await response.json();
@@ -98,7 +98,6 @@ async function grantEntitlements({ supabaseUrl, serviceRoleKey, userId, sessionI
     method: 'POST',
     headers: {
       apikey: serviceRoleKey,
-      authorization: `Bearer ${serviceRoleKey}`,
       'content-type': 'application/json',
       Prefer: 'resolution=ignore-duplicates,return=representation'
     },
@@ -121,7 +120,7 @@ async function saveLibraryMetadata({ supabaseUrl, serviceRoleKey, userId, rows }
   const additions = ownedItems(rows);
   if (!additions.length) return false;
   const userResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
-    headers: { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}` }
+    headers: { apikey: serviceRoleKey }
   });
   if (!userResponse.ok) return false;
   const current = await userResponse.json();
@@ -133,7 +132,7 @@ async function saveLibraryMetadata({ supabaseUrl, serviceRoleKey, userId, rows }
   }, []);
   const updateResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
     method: 'PUT',
-    headers: { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}`, 'content-type': 'application/json' },
+    headers: { apikey: serviceRoleKey, 'content-type': 'application/json' },
     body: JSON.stringify({ user_metadata: { ...(current.user_metadata || {}), minimal_library: merged } })
   });
   return updateResponse.ok;

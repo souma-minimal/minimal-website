@@ -42,7 +42,9 @@ async function checkoutOwnerId(checkout, supabaseUrl, serviceRoleKey) {
   // ownership from the server-managed entitlement record; never from a URL,
   // customer email, or mutable user metadata.
   const response = await fetch(`${supabaseUrl}/rest/v1/purchase_entitlements?stripe_checkout_session_id=eq.${encodeURIComponent(checkout.id)}&select=user_id&limit=2`, {
-    headers: { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}` }
+    // New Supabase secret keys are opaque API keys, not JWTs. The caller's
+    // session token is deliberately not used for this server-side owner lookup.
+    headers: { apikey: serviceRoleKey }
   });
   if (!response.ok) return null;
   const owners = [...new Set((await response.json()).map(row => row.user_id).filter(Boolean))];
