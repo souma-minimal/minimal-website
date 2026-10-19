@@ -1,3 +1,5 @@
+import { runtimeConfiguration, runtimeUnavailableJson } from '../_lib/runtime-config.js';
+
 const stripeApi = 'https://api.stripe.com/v1';
 const encoder = new TextEncoder();
 const signatureToleranceSeconds = 300;
@@ -156,11 +158,10 @@ function filesForPrice(rules, priceId) {
   return (rules?.[priceId] || []).map(file => typeof file === 'string' ? { key: file } : file).filter(file => file.key);
 }
 
-async function sendPurchaseEmail({ env, session, entitlementRows, lines, productMap }) {
+async function sendPurchaseEmail({ env, origin, session, entitlementRows, lines, productMap }) {
   if (!env.RESEND_API_KEY || !env.EMAIL_FROM) return false;
   const recipient = session.customer_details?.email || session.customer_email;
   if (!recipient || !entitlementRows.length) return false;
-  const origin = env.PUBLIC_SITE_URL || 'https://minimal-website-djl.pages.dev';
   let fileRules = {};
   try { fileRules = JSON.parse(env.PRODUCT_ENTITLEMENTS || '{}'); } catch { /* Links remain available through the library. */ }
   const keys = [...new Set(entitlementRows.map(row => row.product_key))];
@@ -181,6 +182,8 @@ async function sendPurchaseEmail({ env, session, entitlementRows, lines, product
 
 export async function onRequestPost(context) {
   const { STRIPE_WEBHOOK_SECRET, STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, PRODUCT_ACCOUNT_ENTITLEMENTS } = context.env;
+  const runtime = runtimeConfiguration(context.env, context.request, { stripe: true, webhook: true });
+  if (!runtime.ok) return runtimeUnavailableJson();
   if (!STRIPE_WEBHOOK_SECRET || !STRIPE_SECRET_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !PRODUCT_ACCOUNT_ENTITLEMENTS) {
     return json({ error: 'Webhook delivery is not configured.' }, 503);
   }
@@ -241,7 +244,7 @@ export async function onRequestPost(context) {
     // Stripe can retry a delivery. Entitlements are idempotent, and the
     // confirmation email must be too: send it only for a newly granted item.
     if (created.length) {
-      await sendPurchaseEmail({ env: context.env, session, entitlementRows: created, lines, productMap }).catch(() => false);
+      await sendPurchaseEmail({ env: context.env, origin: runtime.siteOrigin, session, entitlementRows: created, lines, productMap }).catch(() => false);
     }
     return json({ received: true, granted: created.length });
   } catch {

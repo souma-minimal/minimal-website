@@ -1,5 +1,5 @@
 // Shared, non-sensitive account affordance for every minimal page.
-(() => {
+(async () => {
   const tokenKey = 'minimal-accounts-access-token';
   const refreshKey = 'minimal-accounts-refresh-token';
   const flowKey = 'minimal-accounts-auth-flow';
@@ -40,13 +40,13 @@
   const accountUrl = 'accounts.html';
   const languageKey = 'minimal-language';
   let language = localStorage.getItem(languageKey) || (navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en');
-  const apiKey = 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93';
-  const headers = accessToken => ({ apikey: apiKey, Authorization: `Bearer ${accessToken || apiKey}`, 'Content-Type': 'application/json' });
+  let config = null;
+  const headers = accessToken => ({ apikey: config.publishableKey, Authorization: `Bearer ${accessToken || config.publishableKey}`, 'Content-Type': 'application/json' });
   const label = signedIn => signedIn ? (language === 'ja' ? '● ログイン中' : '● Signed in') : (language === 'ja' ? 'Accounts / ログイン' : 'Accounts / Sign in');
   const signOut = async () => {
     const accessToken = localStorage.getItem(tokenKey);
     if (accessToken) {
-      await fetch('https://etxroajblozqyjyvpcoo.supabase.co/auth/v1/logout', { method: 'POST', headers: headers(accessToken) }).catch(() => null);
+      if (config) await fetch(`${config.url}/auth/v1/logout`, { method: 'POST', headers: headers(accessToken) }).catch(() => null);
     }
     localStorage.removeItem(tokenKey);
     localStorage.removeItem(refreshKey);
@@ -153,10 +153,24 @@
   // header responsive. A background request below still validates the session.
   const cachedEmail = localStorage.getItem(emailKey);
   if (cachedEmail) addShortcut(true, cachedEmail);
+  try {
+    const response = await fetch('/api/runtime-config', { cache: 'no-store' });
+    const runtime = await response.json().catch(() => null);
+    if (!response.ok || !runtime?.supabaseUrl || !runtime?.supabasePublishableKey) throw new Error('Runtime unavailable');
+    config = { url: runtime.supabaseUrl, publishableKey: runtime.supabasePublishableKey };
+  } catch {
+    // A Preview lacking explicit account bindings must not validate, refresh,
+    // or send an existing browser token to the production Auth project.
+    localStorage.removeItem(tokenKey);
+    localStorage.removeItem(refreshKey);
+    localStorage.removeItem(emailKey);
+    addShortcut(false);
+    return;
+  }
   const refreshSession = async () => {
     const refreshToken = localStorage.getItem(refreshKey);
     if (!refreshToken) throw new Error('No refresh token');
-    const response = await fetch('https://etxroajblozqyjyvpcoo.supabase.co/auth/v1/token?grant_type=refresh_token', {
+    const response = await fetch(`${config.url}/auth/v1/token?grant_type=refresh_token`, {
       method: 'POST', headers: headers(), body: JSON.stringify({ refresh_token: refreshToken })
     });
     if (!response.ok) throw new Error('Could not refresh session');
@@ -166,10 +180,10 @@
     return session.access_token;
   };
   const getUser = async () => {
-    let response = await fetch('https://etxroajblozqyjyvpcoo.supabase.co/auth/v1/user', { headers: headers(token) });
+    let response = await fetch(`${config.url}/auth/v1/user`, { headers: headers(token) });
     if (!response.ok) {
       const refreshedAccessToken = await refreshSession();
-      response = await fetch('https://etxroajblozqyjyvpcoo.supabase.co/auth/v1/user', { headers: headers(refreshedAccessToken) });
+      response = await fetch(`${config.url}/auth/v1/user`, { headers: headers(refreshedAccessToken) });
     }
     if (!response.ok) throw new Error('No active session');
     return response.json();

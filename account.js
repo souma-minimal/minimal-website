@@ -1,7 +1,9 @@
 // minimal Accounts uses Supabase Auth's public key only. Passwords are sent
 // directly to Supabase over HTTPS and are never written to browser storage.
-(() => {
-  const config = { url: 'https://etxroajblozqyjyvpcoo.supabase.co', publishableKey: 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93' };
+(async () => {
+  // The browser receives only a deployment-specific Supabase URL and
+  // publishable key. It must never fall back to a production project.
+  let config;
   const tokenKey = 'minimal-accounts-access-token';
   const refreshKey = 'minimal-accounts-refresh-token';
   const flowKey = 'minimal-accounts-auth-flow';
@@ -34,6 +36,19 @@
     feedback.classList.toggle('is-info', type === 'info');
     feedback.textContent = language() === 'en' ? en : ja;
   };
+  try {
+    const response = await fetch('/api/runtime-config', { cache: 'no-store' });
+    const runtime = await response.json().catch(() => null);
+    if (!response.ok || !runtime?.supabaseUrl || !runtime?.supabasePublishableKey) throw new Error('Runtime unavailable');
+    config = { url: runtime.supabaseUrl, publishableKey: runtime.supabasePublishableKey };
+  } catch {
+    form.hidden = true;
+    resetForm.hidden = true;
+    library.hidden = true;
+    signedIn.hidden = true;
+    message('この環境ではアカウント機能を利用できません。', 'Account access is unavailable in this deployment.');
+    return;
+  }
   const authHeaders = (token) => ({ apikey: config.publishableKey, Authorization: `Bearer ${token || config.publishableKey}`, 'Content-Type': 'application/json' });
   const request = async (path, options = {}, token) => {
     const response = await fetch(`${config.url}${path}`, { ...options, headers: { ...authHeaders(token), ...(options.headers || {}) } });

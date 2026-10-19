@@ -1,4 +1,4 @@
-(() => {
+(async () => {
   const status = document.querySelector('[data-delivery-status]');
   const list = document.querySelector('[data-delivery-list]');
   const sessionId = new URLSearchParams(location.search).get('session_id');
@@ -7,13 +7,22 @@
   const copy = (ja, en) => japanese ? ja : en;
   const tokenKey = 'minimal-accounts-access-token';
   const refreshKey = 'minimal-accounts-refresh-token';
-  const supabaseUrl = 'https://etxroajblozqyjyvpcoo.supabase.co';
-  const publicKey = 'sb_publishable_6xjW2XlBXj4tnbibzK1WWQ_30SUWF93';
+  let config;
 
   const fail = message => {
     if (status) status.textContent = message;
     if (list) list.hidden = true;
   };
+
+  try {
+    const response = await fetch('/api/runtime-config', { cache: 'no-store' });
+    const runtime = await response.json().catch(() => null);
+    if (!response.ok || !runtime?.supabaseUrl || !runtime?.supabasePublishableKey) throw new Error('Runtime unavailable');
+    config = { url: runtime.supabaseUrl, publishableKey: runtime.supabasePublishableKey };
+  } catch {
+    fail(copy('この環境では購入内容を確認できません。', 'Purchase delivery is unavailable in this deployment.'));
+    return;
+  }
 
   if (!sessionId) {
     fail(copy('購入情報が見つかりません。ライブラリから受け取り状況を確認してください。', 'We could not find this purchase. Check your library for delivery status.'));
@@ -31,9 +40,9 @@
     if (tokenIsFresh(token || '')) return token;
     const refreshToken = localStorage.getItem(refreshKey);
     if (!refreshToken) return token;
-    const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+    const response = await fetch(`${config.url}/auth/v1/token?grant_type=refresh_token`, {
       method: 'POST',
-      headers: { apikey: publicKey, 'content-type': 'application/json' },
+      headers: { apikey: config.publishableKey, 'content-type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken })
     });
     if (!response.ok) return token;

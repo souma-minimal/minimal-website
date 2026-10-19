@@ -10,7 +10,9 @@ In **minimal-website → Settings → Variables and Secrets → Production**, ad
 
 | Name | Type | Value |
 | --- | --- | --- |
+| `MINIMAL_ENVIRONMENT` | plain text | `production` |
 | `SUPABASE_URL` | plain text | `https://etxroajblozqyjyvpcoo.supabase.co` |
+| `SUPABASE_PUBLISHABLE_KEY` | plain text | The project's **Publishable key** from Supabase → Settings → API Keys. This is the only Supabase key intentionally sent to browsers. |
 | `SUPABASE_SERVICE_ROLE_KEY` | encrypted secret | The **Secret key** from Supabase → Settings → API Keys. Never use the publishable key here. |
 | `STRIPE_WEBHOOK_SECRET` | encrypted secret | The `whsec_…` signing secret created for the endpoint below. |
 | `PRODUCT_ACCOUNT_ENTITLEMENTS` | plain text | A JSON map from Stripe **Price ID** to a minimal product key. |
@@ -21,6 +23,26 @@ In **minimal-website → Settings → Variables and Secrets → Production**, ad
 | `MINIMAL_SOCIAL_URL` | plain text, optional | Needed only when purchase emails are enabled later. Use a single public profile or link page. |
 
 `STRIPE_SECRET_KEY` already exists and must remain a restricted key with Checkout Sessions read permission only. Never use a publishable key, service key, or full-secret `sk_…` key in the browser.
+
+## Preview isolation (required before testing a Pull Request)
+
+In **minimal-website → Settings → Variables and Secrets → Preview**, set a separate, non-production configuration. Do not inherit the Production values.
+
+| Name | Type | Required Preview value |
+| --- | --- | --- |
+| `MINIMAL_ENVIRONMENT` | plain text | `preview` |
+| `PUBLIC_SITE_URL` | plain text | The exact HTTPS origin of that Preview deployment. |
+| `SUPABASE_URL` | plain text | A dedicated Preview Supabase project URL. |
+| `PREVIEW_SUPABASE_URL` | plain text | Exactly the same value as Preview `SUPABASE_URL`. |
+| `PRODUCTION_SUPABASE_URL` | plain text | The production project URL; used only to reject an accidental match. |
+| `SUPABASE_PUBLISHABLE_KEY` | plain text | The dedicated Preview project's publishable key. |
+| `SUPABASE_SERVICE_ROLE_KEY` | encrypted secret | The dedicated Preview project's service role key. |
+| `STRIPE_SECRET_KEY` / `STRIPE_CHECKOUT_KEY` | encrypted secret | Test-mode `sk_test_…` or restricted `rk_test_…` key only. |
+| `STRIPE_WEBHOOK_SECRET` | encrypted secret | A test-mode endpoint secret only, if a Preview webhook is enabled. |
+| `WEBHOOK_ENVIRONMENT` | plain text | `preview` when enabling the Preview webhook. |
+| `R2_BINDING_ENVIRONMENT` | plain text | `preview` when binding a separate Preview R2 bucket. |
+
+Preview delivery additionally requires a distinct R2 bucket bound as `WALLPAPER_FILES`. Do not bind the production bucket. If any required Preview value is omitted, mismatched, or points at the production Supabase URL, the account, checkout, webhook, entitlement, download, library, and survey endpoints return `503` without contacting an external service.
 
 Example product map (replace every Price ID with the live ID from Stripe):
 

@@ -1,3 +1,5 @@
+import { runtimeConfiguration } from '../_lib/runtime-config.js';
+
 const stripeApi = 'https://api.stripe.com/v1';
 
 function message(text, status) {
@@ -48,6 +50,8 @@ async function checkoutOwnerId(checkout, supabaseUrl, serviceRoleKey) {
 }
 
 export async function onRequestGet(context) {
+  const runtime = runtimeConfiguration(context.env, context.request, { stripe: true, r2: true });
+  if (!runtime.ok) return message('Secure delivery is unavailable in this deployment.', 503);
   const url = new URL(context.request.url);
   const sessionId = url.searchParams.get('session_id');
   const key = url.searchParams.get('key');

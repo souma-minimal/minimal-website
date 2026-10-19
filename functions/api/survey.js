@@ -1,3 +1,5 @@
+import { runtimeConfiguration, runtimeUnavailableJson } from '../_lib/runtime-config.js';
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -15,6 +17,8 @@ async function signedInUser(request, supabaseUrl, serviceRoleKey) {
 }
 
 async function userFor(context) {
+  const runtime = runtimeConfiguration(context.env, context.request);
+  if (!runtime.ok) return { error: runtimeUnavailableJson() };
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = context.env;
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return { error: json({ error: 'Survey service is not configured.' }, 503) };
   const user = await signedInUser(context.request, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);

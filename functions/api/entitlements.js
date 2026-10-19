@@ -1,3 +1,5 @@
+import { runtimeConfiguration, runtimeUnavailableJson } from '../_lib/runtime-config.js';
+
 const stripeApi = 'https://api.stripe.com/v1';
 
 function json(data, status = 200) {
@@ -111,6 +113,8 @@ async function synchroniseLibrary({ env, user, checkout, lineItems }) {
 }
 
 export async function onRequestGet(context) {
+  const runtime = runtimeConfiguration(context.env, context.request, { stripe: true });
+  if (!runtime.ok) return runtimeUnavailableJson();
   const sessionId = new URL(context.request.url).searchParams.get('session_id');
   if (!sessionId) return json({ error: 'Missing checkout session.' }, 400);
   if (!context.env.STRIPE_SECRET_KEY || !context.env.SUPABASE_URL || !context.env.SUPABASE_SERVICE_ROLE_KEY || !context.env.PRODUCT_ENTITLEMENTS) {
